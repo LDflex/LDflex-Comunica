@@ -1,4 +1,2 @@
-const ComunicaEngine = {
-};
-
+import ComunicaEngine from './ComunicaEngine';
 export default ComunicaEngine;

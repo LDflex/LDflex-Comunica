@@ -4,7 +4,12 @@
   "author": "Ruben Verborgh <ruben@verborgh.org> (https://ruben.verborgh.org/)",
   "license": "MIT",
   "main": "lib/index.js",
+  "files": [
+    "src",
+    "lib"
+  ],
   "dependencies": {
+    "@comunica/actor-init-sparql": "^1.3.0"
   },
   "peerDependencies": {
     "ldflex": "^0.1.0"
