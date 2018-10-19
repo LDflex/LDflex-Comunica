@@ -3,6 +3,10 @@ This library lets you use
 the [Comunica](https://github.com/comunica/comunica/) query engine
 with the [LDflex](https://github.com/RubenVerborgh/LDflex) language.
 
+[![npm version](https://img.shields.io/npm/v/ldflex-comunica.svg)](https://www.npmjs.com/package/ldflex-comunica)
+[![Build Status](https://travis-ci.org/RubenVerborgh/LDflex-Comunica.svg?branch=master)](https://travis-ci.org/RubenVerborgh/LDflex-Comunica)
+[![Dependency Status](https://david-dm.org/RubenVerborgh/LDflex-Comunica.svg)](https://david-dm.org/RubenVerborgh/LDflex-Comunica)
+
 ## Installation
 ```bash
 npm install ldflex ldflex-comunica
@@ -39,4 +43,4 @@ showPerson(ruben);
 
 ## License
 ©2018–present [Ruben Verborgh](https://ruben.verborgh.org/),
-[MIT License](https://github.com/RubenVerborgh/LDflex/blob/master/LICENSE.md).
+[MIT License](https://github.com/RubenVerborgh/LDflex-Comunica/blob/master/LICENSE.md).
