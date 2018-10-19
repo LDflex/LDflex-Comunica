@@ -10,7 +10,7 @@ npm install ldflex ldflex-comunica
 
 ## Usage
 ```JavaScript
-const { QueryPathFactory } = require('ldflex');
+const { PathFactory } = require('ldflex');
 const { default: ComunicaEngine } = require('ldflex-comunica');
 
 // The JSON-LD context for resolving properties
@@ -23,7 +23,7 @@ const context = {
 // The query engine and its source
 const queryEngine = new ComunicaEngine('https://ruben.verborgh.org/profile/');
 // The object that can create new paths
-const path = new QueryPathFactory({ context, queryEngine });
+const paths = new PathFactory({ context, queryEngine });
 
 async function showPerson(person) {
   console.log(`This person is ${await person.name}`);
@@ -33,7 +33,7 @@ async function showPerson(person) {
     console.log(`- ${name}`);
 }
 
-const person = path.create({ subject: 'https://ruben.verborgh.org/profile/#me' });
+const ruben = paths.create({ subject: 'https://ruben.verborgh.org/profile/#me' });
 showPerson(ruben);
 ```
 
