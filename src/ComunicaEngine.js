@@ -13,7 +13,7 @@ export default class ComunicaEngine {
   }
 
   /**
-   * Creates an asynchronous iterator
+   * Creates an asynchronous iterable
    * of results for the given SPARQL query.
    */
   execute(sparql) {
@@ -31,7 +31,10 @@ export default class ComunicaEngine {
       }
       return new Promise(readNextBinding);
     };
-    return { next };
+    return {
+      next,
+      [Symbol.asyncIterator]() { return this; },
+    };
 
     // Reads the next binding
     function readNextBinding(resolve) {
