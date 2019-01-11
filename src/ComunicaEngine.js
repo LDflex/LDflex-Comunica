@@ -12,8 +12,8 @@ export default class ComunicaEngine {
     this._engine = newEngine();
   }
 
-  get _document() {
-    return (async () => (await this._subject).replace(/#.*/, ''))();
+  getDocument(subject) {
+    return subject.replace(/#.*/, '');
   }
 
   /**
@@ -31,7 +31,7 @@ export default class ComunicaEngine {
     const next = async () => {
       if (!bindings) {
         // Determine the document to query from the subject
-        const document = await this._document;
+        const document = this.getDocument(await this._subject);
         const sources = [{ type: 'file', value: document }];
 
         // Execute the query and retrieve the bindings
