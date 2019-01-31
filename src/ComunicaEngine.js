@@ -12,17 +12,26 @@ export default class ComunicaEngine {
     this._engine = newEngine();
   }
 
+  getDocument(subject) {
+    return subject.replace(/#.*/, '');
+  }
+
   /**
    * Creates an asynchronous iterable
    * of results for the given SPARQL query.
    */
   execute(sparql) {
+    // Comunica does not support SPARQL UPDATE queries yet,
+    // so we temporarily throw an error for them.
+    if (sparql.startsWith('INSERT') || sparql.startsWith('DELETE'))
+      return this.executeUpdate(sparql);
+
     // Create an iterator function that reads the next binding
     let bindings;
     const next = async () => {
       if (!bindings) {
         // Determine the document to query from the subject
-        const document = (await this._subject).replace(/#.*/, '');
+        const document = this.getDocument(await this._subject);
         const sources = [{ type: 'file', value: document }];
 
         // Execute the query and retrieve the bindings
@@ -52,5 +61,12 @@ export default class ComunicaEngine {
         bindings.on('end', done);
       }
     }
+  }
+
+  /**
+   * Throws an error for update queries.
+   */
+  executeUpdate(sparql) {
+    throw new Error(`Comunica does not support SPARQL UPDATE queries, received: ${sparql}`);
   }
 }
