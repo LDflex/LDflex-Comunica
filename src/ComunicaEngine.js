@@ -13,7 +13,7 @@ export default class ComunicaEngine {
   }
 
   getDocument(subject) {
-    return subject.replace(/#.*/, '');
+    return subject.value.replace(/#.*/, '');
   }
 
   /**
