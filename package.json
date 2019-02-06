@@ -22,7 +22,8 @@
     "lib"
   ],
   "dependencies": {
-    "@comunica/actor-init-sparql": "^1.5.0"
+    "@comunica/actor-init-sparql": "^1.5.0",
+    "@comunica/actor-rdf-resolve-quad-pattern-rdfjs-source": "^1.5.4"
   },
   "peerDependencies": {
     "ldflex": "^2.0.0"

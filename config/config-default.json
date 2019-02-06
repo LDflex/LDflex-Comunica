@@ -14,6 +14,7 @@
     "files-cais:config/sets/context-preprocess-rdf-source-identifiers.json",
     "files-cais:config/sets/resolve-federated.json",
     "files-cais:config/sets/resolve-file.json",
+    "files-lc:config/sets/resolve-rdfjssource.json",
     "files-cais:config/sets/resolve-sparql.json",
     "files-cais:config/sets/sparql-init.json",
     "files-cais:config/sets/sparql-optimize.json",

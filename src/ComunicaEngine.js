@@ -1,4 +1,4 @@
-import { newEngine } from '@comunica/actor-init-sparql';
+const engine = require('../lib/comunica-engine');
 
 /**
  * Asynchronous iterator wrapper for the Comunica SPARQL query engine.
@@ -7,9 +7,10 @@ export default class ComunicaEngine {
   /**
    * Create a ComunicaEngine to query the given subject.
    */
-  constructor(subject) {
+  constructor(subject, source) {
     this._subject = subject;
-    this._engine = newEngine();
+    this._engine = engine;
+    this._source = source;
   }
 
   getDocument(subject) {
@@ -30,9 +31,10 @@ export default class ComunicaEngine {
     let bindings;
     const next = async () => {
       if (!bindings) {
-        // Determine the document to query from the subject
-        const document = this.getDocument(await this._subject);
-        const sources = [{ type: 'file', value: document }];
+        // Determine the document to query from the subject if there is no source
+        const sources = this._source ?
+          [{ type: 'rdfjsSource', value: this._source }] :
+          [{ type: 'file', value: this.getDocument(await this._subject) }];
 
         // Execute the query and retrieve the bindings
         const queryResult = await this._engine.query(sparql, { sources });
