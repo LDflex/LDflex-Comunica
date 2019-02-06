@@ -39,8 +39,9 @@
     "jest": "^23.6.0"
   },
   "scripts": {
-    "compile": "comunica-compile-config config/config-default.json > lib/comunica-engine.js",
-    "build": "babel src --out-dir lib && npm run compile",
+    "build:engine": "comunica-compile-config config/config-default.json > lib/comunica-engine.js",
+    "build:lib": "babel src --out-dir lib",
+    "build": "npm run build:lib && npm run build:engine",
     "jest": "jest",
     "lint": "eslint src test",
     "prepublishOnly": "npm run build",

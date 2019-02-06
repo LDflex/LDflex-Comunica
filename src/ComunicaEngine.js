@@ -32,12 +32,12 @@ export default class ComunicaEngine {
     const next = async () => {
       if (!bindings) {
         // Determine the document to query from the subject if there is no source
-        const sources = this._source ?
-          [{ type: 'rdfjsSource', value: this._source }] :
-          [{ type: 'file', value: this.getDocument(await this._subject) }];
+        const source = this._source ?
+          { type: 'rdfjsSource', value: this._source } :
+          { type: 'file', value: this.getDocument(await this._subject) };
 
         // Execute the query and retrieve the bindings
-        const queryResult = await this._engine.query(sparql, { sources });
+        const queryResult = await this._engine.query(sparql, { source });
         bindings = queryResult.bindingsStream;
       }
       return new Promise(readNextBinding);
