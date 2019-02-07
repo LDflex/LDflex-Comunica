@@ -23,7 +23,8 @@
   ],
   "dependencies": {
     "@comunica/actor-init-sparql": "^1.5.0",
-    "@comunica/actor-rdf-resolve-quad-pattern-rdfjs-source": "^1.5.4"
+    "@comunica/actor-rdf-resolve-quad-pattern-rdfjs-source": "^1.5.4",
+    "mkdirp": "^0.5.1"
   },
   "peerDependencies": {
     "ldflex": "^2.0.0"
@@ -39,7 +40,7 @@
     "jest": "^23.6.0"
   },
   "scripts": {
-    "build:engine": "comunica-compile-config config/config-default.json > lib/comunica-engine.js",
+    "build:engine": "mkdirp lib && comunica-compile-config config/config-default.json > lib/comunica-engine.js",
     "build:lib": "babel src --out-dir lib",
     "build": "npm run build:lib && npm run build:engine",
     "jest": "jest",
