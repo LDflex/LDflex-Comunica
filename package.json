@@ -8,13 +8,22 @@
     "type": "git",
     "url": "https://github.com/RubenVerborgh/LDflex-Comunica"
   },
+  "lsd:module": "https://linkedsoftwaredependencies.org/bundles/npm/ldflex-comunica",
+  "lsd:contexts": {
+    "https://linkedsoftwaredependencies.org/bundles/npm/ldflex-comunica/^2.0.0/components/context.jsonld": "components/context.jsonld"
+  },
+  "lsd:importPaths": {
+    "https://linkedsoftwaredependencies.org/bundles/npm/ldflex-comunica/^2.0.0/components/": "components/",
+    "https://linkedsoftwaredependencies.org/bundles/npm/ldflex-comunica/^2.0.0/config/": "config/"
+  },
   "main": "lib/index.js",
   "files": [
     "src",
     "lib"
   ],
   "dependencies": {
-    "@comunica/actor-init-sparql": "^1.5.0"
+    "@comunica/actor-init-sparql": "^1.5.0",
+    "@comunica/actor-rdf-resolve-quad-pattern-rdfjs-source": "^1.5.4"
   },
   "peerDependencies": {
     "ldflex": "^2.0.0"
@@ -30,7 +39,9 @@
     "jest": "^23.6.0"
   },
   "scripts": {
-    "build": "babel src --out-dir lib",
+    "build:engine": "comunica-compile-config config/config-default.json > lib/comunica-engine.js",
+    "build:lib": "babel src --out-dir lib",
+    "build": "npm run build:lib && npm run build:engine",
     "jest": "jest",
     "lint": "eslint src test",
     "prepublishOnly": "npm run build",
