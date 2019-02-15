@@ -1,6 +1,6 @@
 {
   "name": "ldflex-comunica",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Comunica query engine support for the LDflex language",
   "author": "Ruben Verborgh <ruben@verborgh.org> (https://ruben.verborgh.org/)",
   "license": "MIT",
