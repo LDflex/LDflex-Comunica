@@ -1,4 +1,4 @@
-const engine = require('../lib/comunica-engine');
+const DefaultEngine = require('../lib/comunica-engine');
 
 /**
  * Asynchronous iterator wrapper for the Comunica SPARQL query engine.
@@ -6,15 +6,15 @@ const engine = require('../lib/comunica-engine');
 export default class ComunicaEngine {
   /**
    * Create a ComunicaEngine to query the given subject.
+   *
+   * The source can be a single URL, an RDF/JS Datasource,
+   * or an array with any of these.
+   * If undefined, it defaults to dereferencing the subject.
    */
   constructor(subject, source) {
     this._subject = subject;
-    this._engine = engine;
     this._source = source;
-  }
-
-  getDocument(subject) {
-    return subject.value.replace(/#.*/, '');
+    this._engine = DefaultEngine;
   }
 
   /**
@@ -31,16 +31,12 @@ export default class ComunicaEngine {
     let bindings;
     const next = async () => {
       if (!bindings) {
-        let sources;
-        const source = await this._source;
-        if (source) {
-          const sourceArray = Array.isArray(source) ? await Promise.all(source) : [source];
-          sources = sourceArray.map(value => ({ type: typeof value === 'string' ? 'file' : 'rdfjsSource', value }));
-        }
-        else {
-          // Determine the document to query from the subject if there is no source
-          sources = [{ type: 'file', value: this.getDocument(await this._subject) }];
-        }
+        // If no source was chosen, dereference the subject
+        const source = (await this._source) || this.getDocument(await this._subject);
+
+        // Create Comunica sources for every source entry
+        const sources = (Array.isArray(source) ? await Promise.all(source) : [source])
+          .map(value => ({ type: typeof value === 'string' ? 'file' : 'rdfjsSource', value }));
 
         // Execute the query and retrieve the bindings
         const queryResult = await this._engine.query(sparql, { sources });
@@ -76,5 +72,9 @@ export default class ComunicaEngine {
    */
   executeUpdate(sparql) {
     throw new Error(`Comunica does not support SPARQL UPDATE queries, received: ${sparql}`);
+  }
+
+  getDocument(subject) {
+    return subject.value.replace(/#.*/, '');
   }
 }
