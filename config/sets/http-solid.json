@@ -1,0 +1,29 @@
+{
+  "@context": [
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comunica/actor-init-sparql/^1.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comunica/runner/^1.0.0/components/context.jsonld",
+
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comunica/actor-http-solid-auth-fetch/^1.0.0/components/context.jsonld",
+
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comunica/bus-http/^1.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comunica/mediator-number/^1.0.0/components/context.jsonld"
+  ],
+  "@graph": [
+    {
+      "@id": "urn:comunica:my",
+      "actors": [
+        {
+          "@id": "config-sets:http.json#myHttpFetcher",
+          "@type": "ActorHttpSolidAuthFetch"
+        }
+      ]
+    },
+    {
+      "@id": "config-sets:http.json#mediatorHttp",
+      "@type": "MediatorNumberMin",
+      "field": "time",
+      "ignoreErrors": true,
+      "cc:Mediator/bus": { "@id": "cbh:Bus/Http" }
+    }
+  ]
+}

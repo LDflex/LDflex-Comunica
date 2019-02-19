@@ -7,7 +7,7 @@
   "@id": "urn:comunica:my",
   "@type": "Runner",
   "import": [
-    "files-cais:config/sets/http.json",
+    "files-lc:config/sets/http-solid.json",
     "files-cais:config/sets/join.json",
     "files-cais:config/sets/rdf-dereference.json",
     "files-cais:config/sets/rdf-parsers.json",
