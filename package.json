@@ -3,6 +3,9 @@
   "version": "2.2.0",
   "description": "Comunica query engine support for the LDflex language",
   "author": "Ruben Verborgh <ruben@verborgh.org> (https://ruben.verborgh.org/)",
+  "contributors": [
+    "Joachim Van Herwegen"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",

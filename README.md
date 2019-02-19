@@ -42,5 +42,7 @@ showPerson(ruben);
 ```
 
 ## License
-©2018–present [Ruben Verborgh](https://ruben.verborgh.org/),
+©2018–present
+[Ruben Verborgh](https://ruben.verborgh.org/),
+Joachim Van Herwegen.
 [MIT License](https://github.com/RubenVerborgh/LDflex-Comunica/blob/master/LICENSE.md).
