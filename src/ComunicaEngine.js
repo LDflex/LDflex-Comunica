@@ -5,23 +5,20 @@ const DefaultEngine = require('../lib/comunica-engine');
  */
 export default class ComunicaEngine {
   /**
-   * Create a ComunicaEngine to query the given subject.
+   * Create a ComunicaEngine to query the given default source.
    *
-   * The source can be a single URL, an RDF/JS Datasource,
+   * The default source can be a single URL, an RDF/JS Datasource,
    * or an array with any of these.
-   * If undefined, it defaults to dereferencing the subject.
    */
-  constructor(subject, source) {
-    this._subject = subject;
-    this._source = source;
+  constructor(defaultSource) {
     this._engine = DefaultEngine;
+    this._sources = this.toComunicaSources(defaultSource);
   }
 
   /**
-   * Creates an asynchronous iterable
-   * of results for the given SPARQL query.
+   * Creates an asynchronous iterable of results for the given SPARQL query.
    */
-  execute(sparql) {
+  execute(sparql, source) {
     // Comunica does not support SPARQL UPDATE queries yet,
     // so we temporarily throw an error for them.
     if (sparql.startsWith('INSERT') || sparql.startsWith('DELETE'))
@@ -31,14 +28,8 @@ export default class ComunicaEngine {
     let bindings;
     const next = async () => {
       if (!bindings) {
-        // If no source was chosen, dereference the subject
-        const source = (await this._source) || this.getDocument(await this._subject);
-
-        // Create Comunica sources for every source entry
-        const sources = (Array.isArray(source) ? await Promise.all(source) : [source])
-          .map(value => ({ type: typeof value === 'string' ? 'file' : 'rdfjsSource', value }));
-
         // Execute the query and retrieve the bindings
+        const sources = await (source ? this.toComunicaSources(source) : this._sources);
         const queryResult = await this._engine.query(sparql, { sources });
         bindings = queryResult.bindingsStream;
       }
@@ -68,13 +59,34 @@ export default class ComunicaEngine {
   }
 
   /**
-   * Throws an error for update queries.
+   * Creates an asynchronous iterable with the results of the SPARQL UPDATE query.
    */
-  executeUpdate(sparql) {
+  executeUpdate(sparql, source) {
     throw new Error(`Comunica does not support SPARQL UPDATE queries, received: ${sparql}`);
   }
 
-  getDocument(subject) {
-    return subject.value.replace(/#.*/, '');
+  /**
+   * Parses the source(s) into an array of Comunica sources.
+   */
+  async toComunicaSources(source) {
+    let sources = await source;
+    if (!sources)
+      return null;
+    // Strip the fragment of a URI
+    if (typeof sources.value === 'string')
+      sources = sources.value;
+    if (typeof sources === 'string')
+      sources = [sources.replace(/#.*/, '')];
+    // Await multiple promises in an array
+    else if (Array.isArray(sources))
+      sources = await Promise.all(sources);
+    // Wrap a single source in an array
+    else
+      sources = [sources];
+    // Add Comunica source details
+    return sources.map(value => ({
+      value,
+      type: typeof value === 'string' ? 'file' : 'rdfjsSource',
+    }));
   }
 }

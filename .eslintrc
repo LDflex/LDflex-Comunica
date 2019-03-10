@@ -94,7 +94,7 @@
     no-undef: error,
     no-undef-init: error,
     no-undefined: off,
-    no-unused-vars: error,
+    no-unused-vars: [ error, { args: none } ],
     no-use-before-define: [ error, { functions: false } ],
 
     // Node.js
