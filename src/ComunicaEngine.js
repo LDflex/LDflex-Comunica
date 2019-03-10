@@ -22,7 +22,7 @@ export default class ComunicaEngine {
     // Comunica does not support SPARQL UPDATE queries yet,
     // so we temporarily throw an error for them.
     if (sparql.startsWith('INSERT') || sparql.startsWith('DELETE'))
-      return this.executeUpdate(sparql);
+      return this.executeUpdate(sparql, source);
 
     // Create an iterator function that reads the next binding
     let bindings;
