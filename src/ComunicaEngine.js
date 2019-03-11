@@ -78,7 +78,9 @@ export default class ComunicaEngine {
     if (!sources)
       return null;
     // Strip the fragment of a URI
-    if (typeof sources.value === 'string')
+    if (sources instanceof URL)
+      sources = sources.href;
+    else if (sources.termType === 'NamedNode')
       sources = sources.value;
     if (typeof sources === 'string')
       sources = [sources.replace(/#.*/, '')];
