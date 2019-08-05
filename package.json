@@ -26,8 +26,7 @@
   ],
   "dependencies": {
     "@comunica/actor-http-solid-auth-fetch": "^1.0.0",
-    "@comunica/actor-init-sparql": "^1.6.0",
-    "@comunica/actor-rdf-resolve-quad-pattern-rdfjs-source": "^1.6.0"
+    "@comunica/actor-init-sparql": "^1.9.0"
   },
   "peerDependencies": {
     "ldflex": "^2.0.0"
