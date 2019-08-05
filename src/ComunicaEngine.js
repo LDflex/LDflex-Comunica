@@ -26,12 +26,14 @@ export default class ComunicaEngine {
 
     // Create an iterator function that reads the next binding
     let bindings;
+    const errors = [];
     const next = async () => {
       if (!bindings) {
         // Execute the query and retrieve the bindings
         const sources = await (source ? this.toComunicaSources(source) : this._sources);
         const queryResult = await this._engine.query(sparql, { sources });
         bindings = queryResult.bindingsStream;
+        bindings.on('error', error => errors.push(error));
       }
       return new Promise(readNextBinding);
     };
@@ -41,9 +43,12 @@ export default class ComunicaEngine {
     };
 
     // Reads the next binding
-    function readNextBinding(resolve) {
-      const done = () => resolve({ done: true });
+    function readNextBinding(resolve, reject) {
+      if (errors.length > 0)
+        return reject(errors.shift());
+
       // Mark the iterator as done when the source has ended
+      const done = () => resolve({ done: true });
       if (bindings.ended) {
         done();
       }
