@@ -20,6 +20,8 @@
     "https://linkedsoftwaredependencies.org/bundles/npm/ldflex-comunica/^2.0.0/config/": "config/"
   },
   "main": "lib/index.js",
+  "module": "src/index.js",
+  "sideEffects": false,
   "files": [
     "src",
     "lib"
