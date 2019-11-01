@@ -77,23 +77,34 @@ export default class ComunicaEngine {
     let sources = await source;
     if (!sources)
       return null;
+
     // Strip the fragment of a URI
     if (sources instanceof URL)
       sources = sources.href;
     else if (sources.termType === 'NamedNode')
       sources = sources.value;
+
     if (typeof sources === 'string')
       sources = [sources.replace(/#.*/, '')];
-    // Await multiple promises in an array
+    // Flatten recursive calls to this function
     else if (Array.isArray(sources))
-      sources = await Promise.all(sources);
+      sources = flatten(await Promise.all(sources.map(this.toComunicaSources)));
+    // Needs to be after the string check since those also have a match functions
+    else if (sources.match)
+      sources = [Object.assign({ type: 'rdfjsSource' }, sources)];
     // Wrap a single source in an array
     else
       sources = [sources];
+
     // Add Comunica source details
-    return sources.map(value => ({
-      value,
-      type: typeof value === 'string' ? 'file' : 'rdfjsSource',
+    return sources.map(src => ({
+      value: src.value || src,
+      type: src.type,
     }));
   }
+}
+
+// Flattens the given array one level deep
+function flatten(array) {
+  return [].concat(...array);
 }
