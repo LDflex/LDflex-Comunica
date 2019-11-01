@@ -86,9 +86,9 @@ export default class ComunicaEngine {
 
     if (typeof sources === 'string')
       sources = [sources.replace(/#.*/, '')];
-    // Flatten the recursive calls to this function
+    // Flatten recursive calls to this function
     else if (Array.isArray(sources))
-      sources = [].concat(...(await Promise.all(sources.map(src => this.toComunicaSources(src)))));
+      sources = flatten(await Promise.all(sources.map(this.toComunicaSources)));
     // Needs to be after the string check since those also have a match functions
     else if (sources.match)
       sources = [Object.assign({ type: 'rdfjsSource' }, sources)];
@@ -102,4 +102,9 @@ export default class ComunicaEngine {
       type: src.type,
     }));
   }
+}
+
+// Flattens the given array one level deep
+function flatten(array) {
+  return [].concat(...array);
 }
