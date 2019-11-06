@@ -31,7 +31,8 @@ export default class ComunicaEngine {
       if (!bindings) {
         // Execute the query and retrieve the bindings
         const sources = await (source ? this.toComunicaSources(source) : this._sources);
-        const queryResult = await this._engine.query(sparql, { sources });
+        const options = sources.length === 1 ? { source: sources[0] } : { sources };
+        const queryResult = await this._engine.query(sparql, options);
         bindings = queryResult.bindingsStream;
         bindings.on('error', error => errors.push(error));
       }
