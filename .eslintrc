@@ -1,7 +1,9 @@
 {
   env: {
     es6: true,
-    node: true,
+  },
+  globals: {
+    URL: true,
   },
   extends: eslint:recommended,
   parserOptions: {
