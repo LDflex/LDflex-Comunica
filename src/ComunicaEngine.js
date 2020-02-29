@@ -78,12 +78,13 @@ export default class ComunicaEngine {
     if (!sources)
       return null;
 
-    // Strip the fragment of a URI
+    // Transform URLs or terms into strings
     if (sources instanceof URL)
       sources = sources.href;
     else if (sources.termType === 'NamedNode')
       sources = sources.value;
 
+    // Strip the fragment off a URI
     if (typeof sources === 'string')
       sources = [sources.replace(/#.*/, '')];
     // Flatten recursive calls to this function
