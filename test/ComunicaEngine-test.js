@@ -149,6 +149,26 @@ describe('An ComunicaEngine instance without default source', () => {
     setImmediate(() => stream.emit('error', new Error('my error')));
     await expect(readAll(result)).rejects.toThrow('my error');
   });
+
+  it('clears the cache for a given document', async () => {
+    // set up mock
+    const internalEngine = engine._engine;
+    const invalidateHttpCache = jest.fn();
+    engine._engine = { invalidateHttpCache };
+
+    // check success call
+    invalidateHttpCache.mockReturnValue(Promise.resolve('ignored'));
+    await expect(engine.clearCache(PROFILE_URL)).resolves.toBeUndefined();
+    expect(invalidateHttpCache).toHaveBeenCalledTimes(1);
+    expect(invalidateHttpCache).toHaveBeenCalledWith(PROFILE_URL);
+
+    // check error is awaited
+    invalidateHttpCache.mockReturnValue(Promise.reject(new Error('my error')));
+    await expect(engine.clearCache(PROFILE_URL)).rejects.toThrow('my error');
+
+    // remove mock
+    engine._engine = internalEngine;
+  });
 });
 
 describe('An ComunicaEngine instance with a default source', () => {

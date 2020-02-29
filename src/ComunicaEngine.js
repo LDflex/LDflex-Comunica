@@ -115,6 +115,14 @@ export default class ComunicaEngine {
       }
     }
   }
+
+  /**
+   * Removes the given document (or all, if not specified) from the cache,
+   * such that fresh results are obtained next time.
+   */
+  async clearCache(document) {
+    await this._engine.invalidateHttpCache(document);
+  }
 }
 
 // Flattens the given array one level deep
