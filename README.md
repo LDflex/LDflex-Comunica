@@ -5,6 +5,7 @@ with the [LDflex](https://github.com/LDflex/LDflex) language.
 
 [![npm version](https://img.shields.io/npm/v/ldflex-comunica.svg)](https://www.npmjs.com/package/ldflex-comunica)
 [![Build Status](https://travis-ci.org/LDflex/LDflex-Comunica.svg?branch=master)](https://travis-ci.org/LDflex/LDflex-Comunica)
+[![Coverage Status](https://coveralls.io/repos/github/LDflex/LDflex-Comunica/badge.svg?branch=master)](https://coveralls.io/github/LDflex/LDflex-Comunica?branch=master)
 [![Dependency Status](https://david-dm.org/LDflex/LDflex-Comunica.svg)](https://david-dm.org/LDflex/LDflex-Comunica)
 
 ## Installation
