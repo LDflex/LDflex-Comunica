@@ -12,71 +12,41 @@ export default class ComunicaEngine {
    */
   constructor(defaultSource) {
     this._engine = DefaultEngine;
-    this._sources = this.toComunicaSources(defaultSource);
+    // Preload sources but silence errors; they will be thrown during execution
+    this._sources = this.parseSources(defaultSource);
+    this._sources.catch(() => null);
   }
 
   /**
    * Creates an asynchronous iterable of results for the given SPARQL query.
    */
-  execute(sparql, source) {
-    // Comunica does not support SPARQL UPDATE queries yet,
-    // so we temporarily throw an error for them.
-    if (sparql.startsWith('INSERT') || sparql.startsWith('DELETE'))
-      return this.executeUpdate(sparql, source);
+  async* execute(sparql, source) {
+    if ((/^\s*(?:INSERT|DELETE)/i).test(sparql))
+      yield* this.executeUpdate(sparql, source);
 
-    // Create an iterator function that reads the next binding
-    let bindings;
-    const errors = [];
-    const next = async () => {
-      if (!bindings) {
-        // Execute the query and retrieve the bindings
-        const sources = await (source ? this.toComunicaSources(source) : this._sources);
-        const queryResult = await this._engine.query(sparql, { sources });
-        bindings = queryResult.bindingsStream;
-        bindings.on('error', error => errors.push(error));
-      }
-      return new Promise(readNextBinding);
-    };
-    return {
-      next,
-      [Symbol.asyncIterator]() { return this; },
-    };
-
-    // Reads the next binding
-    function readNextBinding(resolve, reject) {
-      if (errors.length > 0)
-        return reject(errors.shift());
-
-      // Mark the iterator as done when the source has ended
-      const done = () => resolve({ done: true });
-      if (bindings.ended) {
-        done();
-      }
-      else {
-        // Wait for either the data or the end event
-        bindings.once('data', data => {
-          resolve({ value: data });
-          bindings.removeListener('end', done);
-        });
-        bindings.on('end', done);
-      }
+    // Load the sources if passed, the default sources otherwise
+    const sources = await (source ? this.parseSources(source) : this._sources);
+    if (sources.length !== 0) {
+      // Execute the query and yield the results
+      const queryResult = await this._engine.query(sparql, { sources });
+      yield* this.streamToAsyncIterable(queryResult.bindingsStream);
     }
   }
 
   /**
    * Creates an asynchronous iterable with the results of the SPARQL UPDATE query.
    */
-  executeUpdate(sparql, source) {
-    throw new Error(`Comunica does not support SPARQL UPDATE queries, received: ${sparql}`);
+  async* executeUpdate(sparql, source) {
+    throw new Error(`SPARQL UPDATE queries are unsupported, received: ${sparql}`);
   }
 
   /**
    * Parses the source(s) into an array of Comunica sources.
    */
-  async toComunicaSources(source) {
+  async parseSources(source) {
     let sources = await source;
     if (!sources)
-      return null;
+      return [];
 
     // Transform URLs or terms into strings
     if (sources instanceof URL)
@@ -89,13 +59,16 @@ export default class ComunicaEngine {
       sources = [sources.replace(/#.*/, '')];
     // Flatten recursive calls to this function
     else if (Array.isArray(sources))
-      sources = flatten(await Promise.all(sources.map(this.toComunicaSources)));
+      sources = await flattenAsync(sources.map(s => this.parseSources(s)));
     // Needs to be after the string check since those also have a match functions
-    else if (sources.match)
+    else if (typeof sources.match === 'function')
       sources = [Object.assign({ type: 'rdfjsSource' }, sources)];
     // Wrap a single source in an array
-    else
+    else if (typeof source.value === 'string')
       sources = [sources];
+    // Error on unsupported sources
+    else
+      throw new Error(`Unsupported source: ${source}`);
 
     // Add Comunica source details
     return sources.map(src => ({
@@ -103,9 +76,48 @@ export default class ComunicaEngine {
       type: src.type,
     }));
   }
+
+  /**
+   * Transforms the readable into an asynchronously iterable object
+   */
+  streamToAsyncIterable(readable) {
+    // Track errors even when no next item is being requested
+    let pendingError;
+    readable.once('error', error => pendingError = error);
+    // Return a asynchronous iterable
+    return {
+      next: () => new Promise(readNext),
+      [Symbol.asyncIterator]() { return this; },
+    };
+
+    // Reads the next item
+    function readNext(resolve, reject) {
+      if (pendingError)
+        return reject(pendingError);
+      if (readable.ended)
+        return resolve({ done: true });
+
+      // Attach stream listeners
+      readable.on('data', yieldValue);
+      readable.on('end', finish);
+      readable.on('error', finish);
+
+      // Outputs the value through the iterable
+      function yieldValue(value) {
+        finish(null, value, true);
+      }
+      // Clean up, and reflect the state in the iterable
+      function finish(error, value, pending) {
+        readable.removeListener('data', yieldValue);
+        readable.removeListener('end', finish);
+        readable.removeListener('error', finish);
+        return error ? reject(error) : resolve({ value, done: !pending });
+      }
+    }
+  }
 }
 
 // Flattens the given array one level deep
-function flatten(array) {
-  return [].concat(...array);
+async function flattenAsync(array) {
+  return [].concat(...(await Promise.all(array)));
 }

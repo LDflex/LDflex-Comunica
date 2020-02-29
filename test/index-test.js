@@ -1,7 +1,7 @@
 import ComunicaEngine from '../src';
 
-describe('The ComunicaEngine module', () => {
-  it('exports a function', () => {
+describe('The main export', () => {
+  it('is a function', () => {
     expect(ComunicaEngine).toBeInstanceOf(Function);
   });
 });

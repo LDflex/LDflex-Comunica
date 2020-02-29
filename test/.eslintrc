@@ -4,5 +4,6 @@
   },
   extends: plugin:jest/recommended,
   rules: {
+    no-empty-function: off,
   },
 }
