@@ -1,4 +1,4 @@
-const DefaultEngine = require('../lib/comunica-engine');
+import DefaultEngine from '../lib/comunica-engine';
 
 /**
  * Asynchronous iterator wrapper for the Comunica SPARQL query engine.
