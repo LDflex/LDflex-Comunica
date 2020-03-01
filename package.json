@@ -1,5 +1,5 @@
 {
-  "name": "ldflex-comunica",
+  "name": "@ldflex/comunica",
   "version": "3.2.3",
   "description": "Comunica query engine support for the LDflex language",
   "author": "Ruben Verborgh <ruben@verborgh.org> (https://ruben.verborgh.org/)",
@@ -11,13 +11,13 @@
     "type": "git",
     "url": "https://github.com/LDflex/LDflex-Comunica"
   },
-  "lsd:module": "https://linkedsoftwaredependencies.org/bundles/npm/ldflex-comunica",
+  "lsd:module": "https://linkedsoftwaredependencies.org/bundles/npm/@ldflex/comunica",
   "lsd:contexts": {
-    "https://linkedsoftwaredependencies.org/bundles/npm/ldflex-comunica/^2.0.0/components/context.jsonld": "components/context.jsonld"
+    "https://linkedsoftwaredependencies.org/bundles/npm/@ldflex/comunica/^3.0.0/components/context.jsonld": "components/context.jsonld"
   },
   "lsd:importPaths": {
-    "https://linkedsoftwaredependencies.org/bundles/npm/ldflex-comunica/^2.0.0/components/": "components/",
-    "https://linkedsoftwaredependencies.org/bundles/npm/ldflex-comunica/^2.0.0/config/": "config/"
+    "https://linkedsoftwaredependencies.org/bundles/npm/@ldflex/comunica/^3.0.0/components/": "components/",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@ldflex/comunica/^3.0.0/config/": "config/"
   },
   "main": "lib/index.js",
   "module": "src/index.js",

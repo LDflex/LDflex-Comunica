@@ -3,8 +3,8 @@
     "https://linkedsoftwaredependencies.org/bundles/npm/componentsjs/^3.0.0/components/context.jsonld",
     {
       "npmd": "https://linkedsoftwaredependencies.org/bundles/npm/",
-      "lc": "npmd:ldflex-comunica/",
-      "files-lc": "lc:^2.0.0/",
+      "lc": "npmd:@ldflex/comunica/",
+      "files-lc": "lc:^3.0.0/",
       "config-sets-lc": "files-lc:config/sets/"
     }
   ]
