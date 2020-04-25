@@ -78,11 +78,13 @@ describe('An ComunicaEngine instance without default source', () => {
       subject: namedNode(PROFILE_URL),
       predicate: namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
       object: namedNode('http://xmlns.com/foaf/0.1/Person'),
+      graph: defaultGraph,
     });
     stream.push({
       subject: namedNode(PROFILE_URL),
       predicate: namedNode('http://example.org/#custom'),
       object: namedNode('http://xmlns.com/foaf/0.1/Agent'),
+      graph: defaultGraph,
     });
     stream.push(null);
     const source = { match: jest.fn(() => stream) };
