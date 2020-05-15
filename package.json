@@ -28,24 +28,24 @@
   ],
   "dependencies": {
     "@comunica/actor-http-solid-auth-fetch": "^1.0.1",
-    "@comunica/actor-init-sparql": "^1.11.0"
+    "@comunica/actor-init-sparql": "^1.12.1"
   },
   "peerDependencies": {
     "ldflex": "^2.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
-    "@babel/core": "^7.8.6",
-    "@babel/preset-env": "^7.8.6",
-    "@pollyjs/adapter-node-http": "^4.0.3",
-    "@pollyjs/core": "^4.0.2",
-    "@pollyjs/persister-fs": "^4.0.2",
+    "@babel/core": "^7.9.6",
+    "@babel/preset-env": "^7.9.6",
+    "@pollyjs/adapter-node-http": "^4.2.1",
+    "@pollyjs/core": "^4.2.1",
+    "@pollyjs/persister-fs": "^4.2.1",
     "@rdfjs/data-model": "^1.1.2",
-    "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.8.1",
-    "husky": "^4.2.3",
-    "jest": "^25.1.0",
-    "mkdirp": "^1.0.3",
+    "eslint": "^7.0.0",
+    "eslint-plugin-jest": "^23.11.0",
+    "husky": "^4.2.5",
+    "jest": "^26.0.1",
+    "mkdirp": "^1.0.4",
     "setup-polly-jest": "^0.7.0"
   },
   "scripts": {
