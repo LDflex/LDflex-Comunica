@@ -1,7 +1,9 @@
 // @ts-ignore
 import DefaultEngine from '../lib/comunica-engine';
+import { newEngine as LocalEngine } from '@comunica/actor-init-sparql'
 import { NamedNode as RDFNamedNode, Term } from 'rdf-js'
 import { ActorInitSparql } from '@comunica/actor-init-sparql/index-browser'
+import { IActorQueryOperationOutput } from '@comunica/bus-query-operation'
 import { BindingsStream } from '@comunica/bus-query-operation'
 
 type RawSources = URL | NamedNode
@@ -20,23 +22,36 @@ interface NamedNode extends RDFNamedNode {
   match: Function
 } 
 
+interface queryResult extends IActorQueryOperationOutput {
+  bindingsStream?: BindingsStream
+}
+
 /**
  * Asynchronous iterator wrapper for the Comunica SPARQL query engine.
  */
 export default class ComunicaEngine {
-  _sources: Promise<Sources>
-  _engine: ActorInitSparql
+  private _sources: Promise<Sources>
+  private _engine: Promise<ActorInitSparql>
   /**
    * Create a ComunicaEngine to query the given default source.
    *
    * The default source can be a single URL, an RDF/JS Datasource,
    * or an array with any of these.
    */
-  constructor(defaultSource : Promise<RawSources>) {
+  constructor(defaultSource : Promise<RawSources>, engine?: () => ActorInitSparql) {
     this._engine = DefaultEngine;
     // Preload sources but silence errors; they will be thrown during execution
     this._sources = this.parseSources(defaultSource);
     this._sources.catch(() => null);
+  }
+
+  async setEngine(engine?: () => ActorInitSparql) {
+    if (engine)
+      return engine();
+    else if ((await this._sources).every(location => isValidURL(location.value)))
+      return LocalEngine();
+    else
+      return DefaultEngine;
   }
 
   /**
@@ -50,8 +65,8 @@ export default class ComunicaEngine {
     const sources = await (source ? this.parseSources(source) : this._sources);
     if (sources.length !== 0) {
       // Execute the query and yield the results
-      const queryResult : IQueryResultBindings = await this._engine.query(sparql, { sources });
-      yield* this.streamToAsyncIterable(queryResult.bindingsStream);
+      const queryResult : queryResult = await (await this._engine).query(sparql, { sources });
+      yield* this.streamToAsyncIterable(queryResult.bindingsStream as BindingsStream);
     }
   }
 
@@ -145,11 +160,16 @@ export default class ComunicaEngine {
    * such that fresh results are obtained next time.
    */
   async clearCache(document: string) {
-    await this._engine.invalidateHttpCache(document);
+    await (await this._engine).invalidateHttpCache(document);
   }
 }
 
 // Flattens the given array one level deep
 async function flattenAsync<T = any>(array: Promise<T>[]): Promise<(T extends readonly (infer InnerArr)[] ? InnerArr : T)[]> {
   return (await Promise.all(array)).flat()
+}
+
+function isValidURL(location: string) {
+  try { new URL(location); return true }
+  catch { return false }
 }

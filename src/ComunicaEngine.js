@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 // @ts-ignore
 const comunica_engine_1 = __importDefault(require("../lib/comunica-engine"));
+const actor_init_sparql_1 = require("@comunica/actor-init-sparql");
 /**
  * Asynchronous iterator wrapper for the Comunica SPARQL query engine.
  */
@@ -15,11 +16,19 @@ class ComunicaEngine {
      * The default source can be a single URL, an RDF/JS Datasource,
      * or an array with any of these.
      */
-    constructor(defaultSource) {
+    constructor(defaultSource, engine) {
         this._engine = comunica_engine_1.default;
         // Preload sources but silence errors; they will be thrown during execution
         this._sources = this.parseSources(defaultSource);
         this._sources.catch(() => null);
+    }
+    async setEngine(engine) {
+        if (engine)
+            return engine();
+        else if ((await this._sources).every(location => isValidURL(location.value)))
+            return actor_init_sparql_1.newEngine();
+        else
+            return comunica_engine_1.default;
     }
     /**
      * Creates an asynchronous iterable of results for the given SPARQL query.
@@ -31,7 +40,7 @@ class ComunicaEngine {
         const sources = await (source ? this.parseSources(source) : this._sources);
         if (sources.length !== 0) {
             // Execute the query and yield the results
-            const queryResult = await this._engine.query(sparql, { sources });
+            const queryResult = await (await this._engine).query(sparql, { sources });
             yield* this.streamToAsyncIterable(queryResult.bindingsStream);
         }
     }
@@ -71,13 +80,10 @@ class ComunicaEngine {
                 throw new Error(`Unsupported source: ${source}`);
         })();
         // Add Comunica source details
-        return allSources.map(src => {
-            console.log(typeof src);
-            return ({
-                value: (typeof src === 'object') ? (src.value ?? src) : src,
-                type: (typeof src === 'object' && 'type' in src) ? src.type : null
-            });
-        });
+        return allSources.map(src => ({
+            value: (typeof src === 'object') ? (src.value ?? src) : src,
+            type: (typeof src === 'object' && 'type' in src) ? src.type : null
+        }));
     }
     /**
      * Transforms the readable into an asynchronously iterable object
@@ -119,11 +125,20 @@ class ComunicaEngine {
      * such that fresh results are obtained next time.
      */
     async clearCache(document) {
-        await this._engine.invalidateHttpCache(document);
+        await (await this._engine).invalidateHttpCache(document);
     }
 }
 exports.default = ComunicaEngine;
 // Flattens the given array one level deep
 async function flattenAsync(array) {
     return (await Promise.all(array)).flat();
+}
+function isValidURL(location) {
+    try {
+        new URL(location);
+        return true;
+    }
+    catch {
+        return false;
+    }
 }
