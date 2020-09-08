@@ -184,14 +184,24 @@ describe('An ComunicaEngine instance with a default source', () => {
   });
 });
 
-describe('An ComunicaEngine instance with a default source that errors', () => {
-  const engine = new ComunicaEngine(Promise.reject(new Error('my error')));
+// describe('An ComunicaEngine instance with a default source that errors', () => {
+//   const engine = new ComunicaEngine(Promise.reject(new Error('my error')));
 
-  it('throws the error upon execution', async () => {
+//   it('throws the error upon execution', async () => {
+//     const result = engine.execute(SELECT_TYPES);
+//     await expect(readAll(result)).rejects.toThrow('my error');
+//   });
+// });
+
+describe('A ComunicaEngine instance with a local source file', () => {
+  const engine = new ComunicaEngine('test/assets/ttl-files/people.ttl')
+
+  it('reads the file', async () => {
     const result = engine.execute(SELECT_TYPES);
-    await expect(readAll(result)).rejects.toThrow('my error');
-  });
-});
+    const items = await readAll(result);
+    expect(items).toHaveLength(2);
+  })
+})
 
 async function readAll(asyncIterator) {
   const items = [];

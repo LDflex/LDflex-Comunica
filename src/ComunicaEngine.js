@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 // @ts-ignore
 const comunica_engine_1 = __importDefault(require("../lib/comunica-engine"));
-const actor_init_sparql_1 = require("@comunica/actor-init-sparql");
+const actor_init_sparql_file_1 = require("@comunica/actor-init-sparql-file");
 /**
  * Asynchronous iterator wrapper for the Comunica SPARQL query engine.
  */
@@ -17,30 +17,47 @@ class ComunicaEngine {
      * or an array with any of these.
      */
     constructor(defaultSource, engine) {
-        this._engine = comunica_engine_1.default;
+        this.DefaultEngine = comunica_engine_1.default;
+        this._engine = this.DefaultEngine;
+        this.LocalEngine = actor_init_sparql_file_1.newEngine();
+        this._allowEngineChange = true;
         // Preload sources but silence errors; they will be thrown during execution
         this._sources = this.parseSources(defaultSource);
         this._sources.catch(() => null);
+        this._engine = this.setEngine(engine);
     }
     async setEngine(engine) {
-        if (engine)
+        if (engine) {
+            this._allowEngineChange = false;
             return engine();
-        else if ((await this._sources).every(location => isValidURL(location.value)))
-            return actor_init_sparql_1.newEngine();
+        }
+        else if ((await this._sources).length > 0 && (await this._sources).some(location => !isValidURL(location.value)))
+            return this.LocalEngine;
         else
-            return comunica_engine_1.default;
+            return this.DefaultEngine;
+    }
+    async getEngine(sources) {
+        return await this._engine;
+        if (this._allowEngineChange) {
+            return (sources.length > 0 && (sources.some(location => !isValidURL(location.value))))
+                ? this.LocalEngine
+                : this.DefaultEngine;
+        }
+        else {
+            return await this._engine;
+        }
     }
     /**
      * Creates an asynchronous iterable of results for the given SPARQL query.
      */
     async *execute(sparql, source) {
+        // Load the sources if passed, the default sources otherwise    
+        const sources = await (source ? this.parseSources(source) : this._sources);
         if ((/^\s*(?:INSERT|DELETE)/i).test(sparql))
             yield* this.executeUpdate(sparql, source);
-        // Load the sources if passed, the default sources otherwise
-        const sources = await (source ? this.parseSources(source) : this._sources);
         if (sources.length !== 0) {
             // Execute the query and yield the results
-            const queryResult = await (await this._engine).query(sparql, { sources });
+            const queryResult = await (await this.getEngine(sources)).query(sparql, { sources });
             yield* this.streamToAsyncIterable(queryResult.bindingsStream);
         }
     }
@@ -62,23 +79,22 @@ class ComunicaEngine {
             sources = sources.href;
         else if (typeof sources === 'object' && 'termType' in sources && sources.termType === 'NamedNode')
             sources = sources.value;
-        const allSources = await (async () => {
-            // Strip the fragment off a URI
-            if (typeof sources === 'string')
-                return [sources.replace(/#.*/, '')];
-            // Flatten recursive calls to this function
-            else if (Array.isArray(sources))
-                return await flattenAsync(sources.map(s => this.parseSources(s)));
-            // Needs to be after the string check since those also have a match functions
-            else if (typeof sources === 'object' && 'match' in sources && typeof sources.match === 'function')
-                return [Object.assign({ type: 'rdfjsSource' }, sources)];
-            // Wrap a single source in an array
-            else if (typeof source === 'object' && 'value' in source && typeof source.value === 'string')
-                return [sources];
-            // Error on unsupported sources
-            else
-                throw new Error(`Unsupported source: ${source}`);
-        })();
+        let allSources;
+        // Strip the fragment off a URI
+        if (typeof sources === 'string')
+            allSources = [sources.replace(/#.*/, '')];
+        // Flatten recursive calls to this function
+        else if (Array.isArray(sources))
+            allSources = await flattenAsync(sources.map(s => this.parseSources(s)));
+        // Needs to be after the string check since those also have a match functions
+        else if (typeof sources === 'object' && 'match' in sources && typeof sources.match === 'function')
+            allSources = [Object.assign({ type: 'rdfjsSource' }, sources)];
+        // Wrap a single source in an array
+        else if (typeof source === 'object' && 'value' in source && typeof source.value === 'string')
+            allSources = [sources];
+        // Error on unsupported sources
+        else
+            throw new Error(`Unsupported source: ${source}`);
         // Add Comunica source details
         return allSources.map(src => ({
             value: (typeof src === 'object') ? (src.value ?? src) : src,
@@ -126,6 +142,8 @@ class ComunicaEngine {
      */
     async clearCache(document) {
         await (await this._engine).invalidateHttpCache(document);
+        await this.LocalEngine.invalidateHttpCache(document);
+        await this.DefaultEngine.invalidateHttpCache(document);
     }
 }
 exports.default = ComunicaEngine;

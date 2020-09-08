@@ -1,0 +1,2 @@
+<https://www.w3.org/People/Berners-Lee/card#i> a <http://xmlns.com/foaf/0.1/Person> .
+<https://ruben.inrupt.net/profile/card> a <http://xmlns.com/foaf/0.1/Person> .

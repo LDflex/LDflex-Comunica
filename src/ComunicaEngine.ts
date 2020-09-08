@@ -1,6 +1,6 @@
 // @ts-ignore
 import DefaultEngine from '../lib/comunica-engine';
-import { newEngine as LocalEngine } from '@comunica/actor-init-sparql'
+import { newEngine as LocalEngine } from '@comunica/actor-init-sparql-file'
 import { NamedNode as RDFNamedNode, Term } from 'rdf-js'
 import { ActorInitSparql } from '@comunica/actor-init-sparql/index-browser'
 import { IActorQueryOperationOutput } from '@comunica/bus-query-operation'
@@ -20,7 +20,7 @@ type Sources = Source[]
 
 interface NamedNode extends RDFNamedNode {
   match: Function
-} 
+}
 
 interface queryResult extends IActorQueryOperationOutput {
   bindingsStream?: BindingsStream
@@ -31,41 +31,57 @@ interface queryResult extends IActorQueryOperationOutput {
  */
 export default class ComunicaEngine {
   private _sources: Promise<Sources>
-  private _engine: Promise<ActorInitSparql>
+  private DefaultEngine = DefaultEngine
+  private _engine: Promise<ActorInitSparql> = this.DefaultEngine
+  private LocalEngine = LocalEngine()
+  private _allowEngineChange: boolean = true
   /**
    * Create a ComunicaEngine to query the given default source.
    *
    * The default source can be a single URL, an RDF/JS Datasource,
    * or an array with any of these.
    */
-  constructor(defaultSource : Promise<RawSources>, engine?: () => ActorInitSparql) {
-    this._engine = DefaultEngine;
+  constructor(defaultSource: Promise<RawSources>, engine?: () => ActorInitSparql) {
     // Preload sources but silence errors; they will be thrown during execution
     this._sources = this.parseSources(defaultSource);
     this._sources.catch(() => null);
+    this._engine = this.setEngine(engine)
   }
 
-  async setEngine(engine?: () => ActorInitSparql) {
-    if (engine)
+  private async setEngine(engine?: () => ActorInitSparql) {
+    if (engine) {
+      this._allowEngineChange = false
       return engine();
-    else if ((await this._sources).every(location => isValidURL(location.value)))
-      return LocalEngine();
+    } else if ((await this._sources).length > 0 && (await this._sources).some(location => !isValidURL(location.value)))
+      return this.LocalEngine;
     else
-      return DefaultEngine;
+      return this.DefaultEngine;
+  }
+
+  private async getEngine(sources: Sources) {
+    return await this._engine
+    if (this._allowEngineChange) {
+      return (sources.length > 0 && (sources.some(location => !isValidURL(location.value))))
+        ? this.LocalEngine
+        : this.DefaultEngine
+    } else {
+      return await this._engine
+    }
   }
 
   /**
    * Creates an asynchronous iterable of results for the given SPARQL query.
    */
-  async* execute(sparql : string, source : Promise<RawSources>): AsyncGenerator<Term, void, undefined> {
+  async* execute(sparql: string, source: Promise<RawSources>): AsyncGenerator<Term, void, undefined> {
+    // Load the sources if passed, the default sources otherwise    
+    const sources = await (source ? this.parseSources(source) : this._sources);
+
     if ((/^\s*(?:INSERT|DELETE)/i).test(sparql))
       yield* this.executeUpdate(sparql, source);
 
-    // Load the sources if passed, the default sources otherwise
-    const sources = await (source ? this.parseSources(source) : this._sources);
     if (sources.length !== 0) {
       // Execute the query and yield the results
-      const queryResult : queryResult = await (await this._engine).query(sparql, { sources });
+      const queryResult: queryResult = await (await this.getEngine(sources)).query(sparql, { sources });
       yield* this.streamToAsyncIterable(queryResult.bindingsStream as BindingsStream);
     }
   }
@@ -91,23 +107,22 @@ export default class ComunicaEngine {
     else if (typeof sources === 'object' && 'termType' in sources && sources.termType === 'NamedNode')
       sources = sources.value;
 
-    const allSources = await (async () => {
+    let allSources;
     // Strip the fragment off a URI
     if (typeof sources === 'string')
-      return [sources.replace(/#.*/, '')];
+      allSources = [sources.replace(/#.*/, '')];
     // Flatten recursive calls to this function
     else if (Array.isArray(sources))
-      return await flattenAsync(sources.map(s => this.parseSources(s)));
+      allSources = await flattenAsync(sources.map(s => this.parseSources(s)));
     // Needs to be after the string check since those also have a match functions
     else if (typeof sources === 'object' && 'match' in sources && typeof sources.match === 'function')
-      return [Object.assign({ type: 'rdfjsSource' }, sources)];
+      allSources = [Object.assign({ type: 'rdfjsSource' }, sources)];
     // Wrap a single source in an array
     else if (typeof source === 'object' && 'value' in source && typeof source.value === 'string')
-      return [sources];
+      allSources = [sources];
     // Error on unsupported sources
     else
       throw new Error(`Unsupported source: ${source}`);
-    })()
 
     // Add Comunica source details
     return (allSources as Array<string | NamedNode | Source>).map(src => ({
@@ -128,13 +143,13 @@ export default class ComunicaEngine {
       next: () => new Promise(readNext),
       [Symbol.asyncIterator]() { return this; },
     };
-    
+
     // Reads the next item
-    function readNext(resolve: (obj : IteratorResult<Term, any>) => void, reject: (err: Error) => void) {
+    function readNext(resolve: (obj: IteratorResult<Term, any>) => void, reject: (err: Error) => void) {
       if (pendingError)
         return reject(pendingError);
       if (readable.ended)
-        return resolve({ done: true, value : null });
+        return resolve({ done: true, value: null });
 
       // Attach stream listeners
       readable.on('data', yieldValue);
@@ -161,6 +176,8 @@ export default class ComunicaEngine {
    */
   async clearCache(document: string) {
     await (await this._engine).invalidateHttpCache(document);
+    await this.LocalEngine.invalidateHttpCache(document);
+    await this.DefaultEngine.invalidateHttpCache(document);
   }
 }
 
@@ -169,7 +186,7 @@ async function flattenAsync<T = any>(array: Promise<T>[]): Promise<(T extends re
   return (await Promise.all(array)).flat()
 }
 
-function isValidURL(location: string) {
+function isValidURL(location: string): boolean {
   try { new URL(location); return true }
   catch { return false }
 }
