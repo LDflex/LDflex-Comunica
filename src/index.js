@@ -1,2 +1,7 @@
-import ComunicaEngine from './ComunicaEngine';
-export default ComunicaEngine;
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const ComunicaEngine_1 = __importDefault(require("./ComunicaEngine"));
+exports.default = ComunicaEngine_1.default;

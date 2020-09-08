@@ -4,7 +4,8 @@
   "description": "Comunica query engine support for the LDflex language",
   "author": "Ruben Verborgh <ruben@verborgh.org> (https://ruben.verborgh.org/)",
   "contributors": [
-    "Joachim Van Herwegen"
+    "Joachim Van Herwegen",
+    "Jesse Wright"
   ],
   "license": "MIT",
   "repository": {
@@ -53,9 +54,9 @@
     "build:lib": "babel src --out-dir lib",
     "build": "npm run build:lib && npm run build:engine",
     "jest": "jest",
-    "lint": "eslint src test",
+    "lint": "eslint src test --fix",
     "prepublishOnly": "npm run build",
-    "test": "npm run lint && npm run jest",
+    "test": "npm run jest",
     "test:dev": "npm run jest -- --watch"
   }
 }
