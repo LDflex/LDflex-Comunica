@@ -1,6 +1,6 @@
 {
   "name": "@ldflex/comunica",
-  "version": "3.4.0",
+  "version": "3.4.1",
   "description": "Comunica query engine support for the LDflex language",
   "author": "Ruben Verborgh <ruben@verborgh.org> (https://ruben.verborgh.org/)",
   "contributors": [
