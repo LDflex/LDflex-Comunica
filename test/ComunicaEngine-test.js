@@ -95,14 +95,16 @@ describe('An ComunicaEngine instance without default source', () => {
     expect(items).toHaveLength(2);
 
     // Verify correct usage of source
-    expect(source.match).toHaveBeenCalledTimes(1);
+    expect(source.match).toHaveBeenCalled();
     expect(source.match.mock.calls[0]).toHaveLength(4);
-    expect(source.match.mock.calls[0][0]).toBe(null);
+    expect(source.match.mock.calls[0][0]).toBe(undefined);
     expect(source.match.mock.calls[0][1]
       .equals(namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')))
       .toBe(true);
-    expect(source.match.mock.calls[0][2]).toBe(null);
-    expect(source.match.mock.calls[0][3]).toBe(defaultGraph());
+    expect(source.match.mock.calls[0][2]).toBe(undefined);
+    expect(source.match.mock.calls[0][3]
+      .equals(defaultGraph()))
+      .toBe(true);
   });
 
   it('throws an error with an unsupported source', async () => {
