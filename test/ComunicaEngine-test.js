@@ -133,8 +133,16 @@ describe('An ComunicaEngine instance without default source', () => {
 
   it('reads an ended stream', async () => {
     const stream = new Readable();
-    stream.ended = true;
+    stream.push(null);
     const result = engine.streamToAsyncIterable(stream);
+    expect(await readAll(result)).toHaveLength(0);
+  });
+
+  it('reads a stream that ends immediately', async () => {
+    const stream = new Readable();
+    const result = engine.streamToAsyncIterable(stream);
+    stream.push(null);
+    await new Promise(resolve => setImmediate(resolve));
     expect(await readAll(result)).toHaveLength(0);
   });
 
@@ -143,6 +151,7 @@ describe('An ComunicaEngine instance without default source', () => {
     stream._read = () => {};
     const result = engine.streamToAsyncIterable(stream);
     stream.emit('error', new Error('my error'));
+    stream.emit('error', new Error('my other error'));
     await expect(readAll(result)).rejects.toThrow('my error');
   });
 

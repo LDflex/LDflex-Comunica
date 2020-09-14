@@ -81,38 +81,57 @@ export default class ComunicaEngine {
    * Transforms the readable into an asynchronously iterable object
    */
   streamToAsyncIterable(readable) {
-    // Track errors even when no next item is being requested
+    let done = false;
     let pendingError;
-    readable.once('error', error => pendingError = error);
-    // Return a asynchronous iterable
+    let pendingPromise;
+
+    readable.on('readable', settlePromise);
+    readable.on('error', finish);
+    readable.on('end', finish);
+
     return {
-      next: () => new Promise(readNext),
+      next: () => new Promise(trackPromise),
       [Symbol.asyncIterator]() { return this; },
     };
 
-    // Reads the next item
-    function readNext(resolve, reject) {
-      if (pendingError)
-        return reject(pendingError);
-      if (readable.ended)
-        return resolve({ done: true });
+    function trackPromise(resolve, reject) {
+      pendingPromise = { resolve, reject };
+      settlePromise();
+    }
 
-      // Attach stream listeners
-      readable.on('data', yieldValue);
-      readable.on('end', finish);
+    function settlePromise() {
+      // Finish if the stream errored or ended
+      if (done || pendingError) {
+        finish();
+      }
+      // Try to resolve the promise with a value
+      else if (pendingPromise) {
+        const value = readable.read();
+        if (value !== null) {
+          pendingPromise.resolve({ value });
+          pendingPromise = null;
+        }
+      }
+    }
+
+    function finish(error) {
+      // Finish with or without an error
+      if (!pendingError) {
+        done = true;
+        pendingError = error;
+      }
+      // Try to emit the result
+      if (pendingPromise) {
+        if (!pendingError)
+          pendingPromise.resolve({ done });
+        else
+          pendingPromise.reject(pendingError);
+        pendingPromise = null;
+      }
+      // Detach listeners
+      readable.on('readable', settlePromise);
       readable.on('error', finish);
-
-      // Outputs the value through the iterable
-      function yieldValue(value) {
-        finish(null, value, true);
-      }
-      // Clean up, and reflect the state in the iterable
-      function finish(error, value, pending) {
-        readable.removeListener('data', yieldValue);
-        readable.removeListener('end', finish);
-        readable.removeListener('error', finish);
-        return error ? reject(error) : resolve({ value, done: !pending });
-      }
+      readable.on('end', finish);
     }
   }
 
