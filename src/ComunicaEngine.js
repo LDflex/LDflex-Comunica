@@ -9,6 +9,7 @@ export default class ComunicaEngine {
    *
    * The default source can be a single URL, an RDF/JS Datasource,
    * or an array with any of these.
+   * The options are passed on to Comunica.
    */
   constructor(defaultSource, options) {
     this._engine = DefaultEngine;
