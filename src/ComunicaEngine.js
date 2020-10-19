@@ -10,9 +10,9 @@ export default class ComunicaEngine {
    * The default source can be a single URL, an RDF/JS Datasource,
    * or an array with any of these.
    */
-  constructor(defaultSource, optionalArguments) {
+  constructor(defaultSource, options) {
     this._engine = DefaultEngine;
-    this._optionalArguments = optionalArguments;
+    this._options = options;
 
     // Preload sources but silence errors; they will be thrown during execution
     this._sources = this.parseSources(defaultSource);
@@ -30,7 +30,7 @@ export default class ComunicaEngine {
     const sources = await (source ? this.parseSources(source) : this._sources);
     if (sources.length !== 0) {
       // Execute the query and yield the results
-      const queryResult = await this._engine.query(sparql, Object.assign({ sources }, this._optionalArguments));
+      const queryResult = await this._engine.query(sparql, { sources, ...this._options });
       yield* this.streamToAsyncIterable(queryResult.bindingsStream);
     }
   }
