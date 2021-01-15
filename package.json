@@ -11,14 +11,7 @@
     "type": "git",
     "url": "https://github.com/LDflex/LDflex-Comunica"
   },
-  "lsd:module": "https://linkedsoftwaredependencies.org/bundles/npm/@ldflex/comunica",
-  "lsd:contexts": {
-    "https://linkedsoftwaredependencies.org/bundles/npm/@ldflex/comunica/^3.0.0/components/context.jsonld": "components/context.jsonld"
-  },
-  "lsd:importPaths": {
-    "https://linkedsoftwaredependencies.org/bundles/npm/@ldflex/comunica/^3.0.0/components/": "components/",
-    "https://linkedsoftwaredependencies.org/bundles/npm/@ldflex/comunica/^3.0.0/config/": "config/"
-  },
+  "lsd:module": true,
   "main": "lib/index.js",
   "module": "src/index.js",
   "sideEffects": false,
@@ -27,8 +20,8 @@
     "lib"
   ],
   "dependencies": {
-    "@comunica/actor-http-solid-auth-fetch": "^1.0.1",
-    "@comunica/actor-init-sparql": "^1.17.0"
+    "@comunica/actor-http-solid-auth-fetch": "^1.2.0",
+    "@comunica/actor-init-sparql": "^1.19.0"
   },
   "peerDependencies": {
     "ldflex": "^2.0.0"
