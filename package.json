@@ -30,7 +30,7 @@
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.6",
     "@babel/preset-env": "^7.9.6",
-    "@pollyjs/adapter-node-http": "^4.2.1",
+    "@pollyjs/adapter-node-http": "^5.1.1",
     "@pollyjs/core": "^4.2.1",
     "@pollyjs/persister-fs": "^5.1.1",
     "@rdfjs/data-model": "^1.1.2",
