@@ -2,7 +2,13 @@ import ComunicaEngine from '../src/ComunicaEngine';
 
 import { mockHttp } from './util';
 import { namedNode, defaultGraph } from '@rdfjs/data-model';
+import { newEngine as localFileEngine } from '@comunica/actor-init-sparql-file';
+// import { newEngine as rdfjsFileEngine } from '@comunica/actor-init-sparql-rdfjs';
+// import { StreamParser, Store } from 'n3';
+// import { Store } from 'n3';
 import { Readable } from 'stream';
+// import fs from 'fs';
+import path from 'path';
 
 const SELECT_TYPES = `
   SELECT ?subject ?type WHERE {
@@ -203,6 +209,54 @@ describe('An ComunicaEngine instance with a default source that errors', () => {
     await expect(readAll(result)).rejects.toThrow('my error');
   });
 });
+
+describe('An ComunicaEngine with local file engine configuration', () => {
+  const engine = new ComunicaEngine('./data/berners-lee.ttl', { engine: localFileEngine() });
+
+  it('yields results for a SELECT query with a string URL', async () => {
+    const result = engine.execute(SELECT_TYPES, PROFILE_URL);
+    expect(await readAll(result)).toHaveLength(6);
+  });
+});
+
+describe('An ComunicaEngine with local file engine configuration & custom options', () => {
+  const engine = new ComunicaEngine([], {
+    engine: localFileEngine(),
+    options: {
+      sources: [path.join(__dirname, 'data', 'berners-lee.ttl')],
+    },
+  });
+
+  it('yields results for a SELECT query with a string URL', async () => {
+    const result = engine.execute(SELECT_TYPES, PROFILE_URL);
+    expect(await readAll(result)).toHaveLength(6);
+  });
+});
+
+// describe('An ComunicaEngine with local rdfjs engine configuration', () => {
+//   // const parser = new StreamParser();
+//   // const rdfStream = fs.createReadStream(path.join(__dirname, './data/berners-lee.ttl'));
+//   // rdfStream.pipe(parser);
+
+//   const store = new Store();
+//   // store = Object.assign({ type: 'rdfjsSource' }, store);
+//   // store.import(parser);
+
+//   const engine = new ComunicaEngine([Object.assign({ type: 'rdfjsSource' }, store)], { engine: rdfjsFileEngine() });
+
+
+//   // rdfStream.
+//   // store.import(parser.);
+
+//   // rdfStream.on('end', () => {
+//   // const engine = new ComunicaEngine(store, { engine: rdfjsFileEngine() });
+
+//   it('yields results for a SELECT query with a string URL', async () => {
+//     const result = engine.execute(SELECT_TYPES, PROFILE_URL);
+//     expect(await readAll(result)).toHaveLength(6);
+//   });
+//   // });
+// });
 
 async function readAll(asyncIterator) {
   const items = [];

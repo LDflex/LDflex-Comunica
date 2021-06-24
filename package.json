@@ -30,6 +30,8 @@
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.6",
     "@babel/preset-env": "^7.9.6",
+    "@comunica/actor-init-sparql-file": "^1.21.3",
+    "@comunica/actor-init-sparql-rdfjs": "^1.21.3",
     "@pollyjs/adapter-node-http": "^4.2.1",
     "@pollyjs/core": "^4.2.1",
     "@pollyjs/persister-fs": "^4.2.1",
@@ -39,6 +41,7 @@
     "husky": "^4.2.5",
     "jest": "^26.0.1",
     "mkdirp": "^1.0.4",
+    "n3": "^1.10.0",
     "semantic-release": "^17.4.2",
     "setup-polly-jest": "^0.7.0"
   },
