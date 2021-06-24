@@ -4,7 +4,7 @@ the [Comunica](https://github.com/comunica/comunica/) query engine
 with the [LDflex](https://github.com/LDflex/LDflex) language.
 
 [![npm version](https://img.shields.io/npm/v/@ldflex/comunica.svg)](https://www.npmjs.com/package/@ldflex/comunica)
-[![Build Status](https://travis-ci.com/LDflex/LDflex-Comunica.svg?branch=master)](https://travis-ci.com/LDflex/LDflex-Comunica)
+[![build](https://img.shields.io/github/workflow/status/LDflex/LDflex-Comunica/Push%20Checks)](https://github.com/LDflex/LDflex-Comunica/tree/master/)
 [![Coverage Status](https://coveralls.io/repos/github/LDflex/LDflex-Comunica/badge.svg?branch=master)](https://coveralls.io/github/LDflex/LDflex-Comunica?branch=master)
 [![Dependency Status](https://david-dm.org/LDflex/LDflex-Comunica.svg)](https://david-dm.org/LDflex/LDflex-Comunica)
 
