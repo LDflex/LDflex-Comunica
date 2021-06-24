@@ -39,6 +39,7 @@
     "husky": "^4.2.5",
     "jest": "^26.0.1",
     "mkdirp": "^1.0.4",
+    "semantic-release": "^17.4.2",
     "setup-polly-jest": "^0.7.0"
   },
   "scripts": {
@@ -50,5 +51,23 @@
     "prepublishOnly": "npm run build",
     "test": "npm run lint && npm run jest",
     "test:dev": "npm run jest -- --watch"
+  },
+  "release": {
+    "branches": [
+      "master",
+      "+([0-9])?(.{+([0-9]),x}).x",
+      "next",
+      {
+        "name": "alpha",
+        "prerelease": true
+      },
+      {
+        "name": "beta",
+        "prerelease": true
+      }
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
