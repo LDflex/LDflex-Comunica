@@ -247,7 +247,6 @@ describe('A ComunicaEngine instance with an rdfjs source (as input to execute)',
   });
 });
 
-
 describe('An ComunicaEngine instance with a default source that errors', () => {
   const engine = new ComunicaEngine(Promise.reject(new Error('my error')));
 

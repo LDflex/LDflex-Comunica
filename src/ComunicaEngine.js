@@ -155,7 +155,6 @@ function assign(props, orig) {
   return Object.assign(Object.create(Object.getPrototypeOf(orig)), { ...orig, ...props });
 }
 
-
 // Flattens the given array one level deep
 async function flattenAsync(array) {
   return [].concat(...(await Promise.all(array)));
