@@ -153,7 +153,7 @@ export default class ComunicaEngine {
  */
 function assign(props, orig) {
   // https://stackoverflow.com/questions/41474986/how-to-clone-a-javascript-es6-class-instance
-  return Object.assign(Object.create(Object.getPrototypeOf(orig)), { ...orig, ...props });
+  return Object.assign(Object.create(orig), { ...orig, ...props });
 }
 
 // Flattens the given array one level deep
