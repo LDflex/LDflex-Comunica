@@ -45,6 +45,48 @@ const ruben = paths.create({
 showPerson(ruben);
 ```
 
+## Features
+
+### Using a Customised Comunica Engine
+
+This example uses the comunica engine for local file queries.
+
+```JavaScript
+const { PathFactory } = require('ldflex');
+const { default: ComunicaEngine } = require('@ldflex/comunica');
+const { namedNode } = require('@rdfjs/data-model');
+const { newEngine: localFileEngine } = require('@comunica/actor-init-sparql-file');
+
+// The JSON-LD context for resolving properties
+const context = {
+  "@context": {
+    "@vocab": "http://xmlns.com/foaf/0.1/",
+    "friends": "knows",
+  }
+};
+// The query engine and its source
+const queryEngine = new ComunicaEngine(
+    path.join(__dirname, 'ruben-verborgh.ttl'),
+    { engine: localFileEngine() }
+  );
+// The object that can create new paths
+const paths = new PathFactory({ context, queryEngine });
+
+async function showPerson(person) {
+  console.log(`This person is ${await person.name}`);
+
+  console.log(`${await person.givenName} is friends with:`);
+  for await (const name of person.friends.givenName)
+    console.log(`- ${name}`);
+}
+
+const ruben = paths.create({
+  subject: namedNode('https://ruben.verborgh.org/profile/#me'),
+});
+showPerson(ruben);
+```
+
+
 ## License
 ©2018–present
 [Ruben Verborgh](https://ruben.verborgh.org/),
