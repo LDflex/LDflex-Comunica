@@ -62,7 +62,7 @@ export default class ComunicaEngine {
       sources = await flattenAsync(sources.map(s => this.parseSources(s)));
     // Needs to be after the string check since those also have a match functions
     else if (typeof sources.match === 'function')
-      sources = [Object.assign({ type: 'rdfjsSource' }, sources)];
+      sources = [assign({ type: 'rdfjsSource' }, sources)];
     // Wrap a single source in an array
     else if (typeof source.value === 'string')
       sources = [sources];
@@ -142,6 +142,17 @@ export default class ComunicaEngine {
   async clearCache(document) {
     await this._engine.invalidateHttpCache(document);
   }
+}
+
+/**
+ * Extends Object.assign by also copying prototype methods
+ * @param {Object} props To add to the object
+ * @param {Object} orig Original Object
+ * @returns Copy of original object with added props
+ */
+function assign(props, orig) {
+  // https://stackoverflow.com/questions/41474986/how-to-clone-a-javascript-es6-class-instance
+  return Object.assign(Object.create(orig), { ...orig, ...props });
 }
 
 // Flattens the given array one level deep

@@ -1,7 +1,8 @@
 import ComunicaEngine from '../src/ComunicaEngine';
 
 import { mockHttp } from './util';
-import { namedNode, defaultGraph } from '@rdfjs/data-model';
+import { namedNode, defaultGraph, quad } from '@rdfjs/data-model';
+import { Store } from 'n3';
 import { Readable } from 'stream';
 
 const SELECT_TYPES = `
@@ -192,6 +193,57 @@ describe('An ComunicaEngine instance with a default source', () => {
   it('yields results for a SELECT query with a string URL', async () => {
     const result = engine.execute(SELECT_TYPES, PROFILE_URL);
     expect(await readAll(result)).toHaveLength(6);
+  });
+});
+
+describe('A ComunicaEngine instance with an rdfjs source (in list)', () => {
+  const store = new Store([
+    quad(
+      namedNode('http://example.org/Jesse'),
+      namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+      namedNode('http://xmlns.com/foaf/0.1/Person'),
+    ),
+  ]);
+
+  const engine = new ComunicaEngine([store]);
+
+  it('yields results for a SELECT query', async () => {
+    const result = engine.execute(SELECT_TYPES);
+    expect(await readAll(result)).toHaveLength(1);
+  });
+});
+
+describe('A ComunicaEngine instance with an rdfjs source', () => {
+  const store = new Store([
+    quad(
+      namedNode('http://example.org/Jesse'),
+      namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+      namedNode('http://xmlns.com/foaf/0.1/Person'),
+    ),
+  ]);
+
+  const engine = new ComunicaEngine(store);
+
+  it('yields results for a SELECT query', async () => {
+    const result = engine.execute(SELECT_TYPES);
+    expect(await readAll(result)).toHaveLength(1);
+  });
+});
+
+describe('A ComunicaEngine instance with an rdfjs source (as input to execute)', () => {
+  const store = new Store([
+    quad(
+      namedNode('http://example.org/Jesse'),
+      namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+      namedNode('http://xmlns.com/foaf/0.1/Person'),
+    ),
+  ]);
+
+  const engine = new ComunicaEngine();
+
+  it('yields results for a SELECT query', async () => {
+    const result = engine.execute(SELECT_TYPES, store);
+    expect(await readAll(result)).toHaveLength(1);
   });
 });
 
