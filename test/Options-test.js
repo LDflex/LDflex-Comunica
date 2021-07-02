@@ -1,53 +1,14 @@
 import ComunicaEngine from '../src/ComunicaEngine';
 
 import { readAll } from './util';
-import { namedNode, quad } from '@rdfjs/data-model';
 import { newEngine as localFileEngine } from '@comunica/actor-init-sparql-file';
-import { newEngine as rdfjsFileEngine } from '@comunica/actor-init-sparql-rdfjs';
-import { Store } from 'n3';
 import path from 'path';
-import http from 'http';
-import { ProxyHandlerStatic } from "@comunica/actor-http-proxy";
 
 const SELECT_TYPES = `
   SELECT ?subject ?type WHERE {
     ?subject a ?type.
   }
 `;
-
-// describe('Testing proxy', () => {
-//   function requestListener(req, res) {
-//     console.log('request recieved')
-//     res.writeHead(200);
-//     res.end('Hello, World!');
-//   }
-
-//   const requestListenerSpy = jest.s
-
-//   const server = http.createServer(requestListenerSpy);
-//   beforeEach(() => {
-//     server.listen(8080);
-//   });
-
-//   afterEach(() => {
-//     server.close();
-//   });
-
-//   const engine = new ComunicaEngine(
-//     'https://www.w3.org/People/Berners-Lee/card#i',
-//     {
-//       options: {
-//         httpProxyHandler: new ProxyHandlerStatic('http://localhost:8080/'),
-//       },
-//     },
-//   );
-
-//   it('yields results for a SELECT query with a string URL', async () => {
-//     const result = engine.execute(SELECT_TYPES);
-//     expect(requestListenerSpy).toHaveBeenCalled();
-//     expect(await readAll(result)).toHaveLength(6);
-//   });
-// });
 
 describe('An ComunicaEngine with local file engine configuration', () => {
   const engine = new ComunicaEngine(
