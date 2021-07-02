@@ -13,8 +13,6 @@ const SELECT_TYPES = `
   }
 `;
 
-const PROFILE_URL = 'https://www.w3.org/People/Berners-Lee/card#i';
-
 describe('An ComunicaEngine with local file engine configuration', () => {
   const engine = new ComunicaEngine(path.join(__dirname, 'data', 'berners-lee.ttl'), { engine: localFileEngine() });
 
@@ -34,7 +32,7 @@ describe('An ComunicaEngine with local file engine configuration & custom option
 
   it('yields results for a SELECT query with a string URL', async () => {
     // Need at least one source (not in options) so engine gets called
-    const result = engine.execute(SELECT_TYPES, PROFILE_URL);
+    const result = engine.execute(SELECT_TYPES, 'http://example.org');
     expect(await readAll(result)).toHaveLength(6);
   });
 });

@@ -86,6 +86,9 @@ const ruben = paths.create({
 showPerson(ruben);
 ```
 ### Adding custom options to the ComunicaEngine
+
+Add [comunica context options](https://comunica.dev/docs/query/advanced/context/) which are passed to the Comunica Engine. 
+
 ```JavaScript
 const { PathFactory } = require('ldflex');
 const { default: ComunicaEngine } = require('@ldflex/comunica');

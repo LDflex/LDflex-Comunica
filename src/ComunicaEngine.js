@@ -29,7 +29,7 @@ export default class ComunicaEngine {
     const sources = await (source ? this.parseSources(source) : this._sources);
     if (sources.length !== 0) {
       // Execute the query and yield the results
-      const queryResult = await this._engine.query(sparql, { sources });
+      const queryResult = await this._engine.query(sparql, { sources, ...this._options });
       yield* this.streamToAsyncIterable(queryResult.bindingsStream);
     }
   }
