@@ -98,10 +98,13 @@ const context = {
     "friends": "knows",
   }
 };
+
 // The query engine and its source
-const queryEngine = new ComunicaEngine('https://ruben.verborgh.org/profile/', { options: {
-    /* add options here */
-  } });
+const queryEngine = new ComunicaEngine(
+    'https://ruben.verborgh.org/profile/',
+    { options: {/* add options here */} },
+  );
+
 // The object that can create new paths
 const paths = new PathFactory({ context, queryEngine });
 
@@ -121,6 +124,4 @@ showPerson(ruben);
 
 ## License
 ©2018–present
-[Ruben Verborgh](https://ruben.verborgh.org/),
-Joachim Van Herwegen.
-[MIT License](https://github.com/LDflex/LDflex-Comunica/blob/master/LICENSE.md).
+[Ruben Verborgh](https://ruben.verborgh.org/), Joachim Van Herwegen, [Jesse Wright](https://github.com/jeswr/). [MIT License](https://github.com/LDflex/LDflex-Comunica/blob/master/LICENSE.md).
