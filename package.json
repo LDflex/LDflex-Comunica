@@ -34,7 +34,7 @@
     "@comunica/actor-init-sparql-file": "^1.21.3",
     "@comunica/actor-init-sparql-rdfjs": "^1.21.3",
     "@pollyjs/adapter-node-http": "^5.1.1",
-    "@pollyjs/core": "^4.2.1",
+    "@pollyjs/core": "^5.1.1",
     "@pollyjs/persister-fs": "^5.1.1",
     "@rdfjs/data-model": "^1.1.2",
     "eslint": "^7.0.0",
