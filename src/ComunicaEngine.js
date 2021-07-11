@@ -10,11 +10,12 @@ export default class ComunicaEngine {
    * The default source can be a single URL, an RDF/JS Datasource,
    * or an array with any of these.
    */
-  constructor(defaultSource) {
-    this._engine = DefaultEngine;
+  constructor(defaultSource, settings = {}) {
+    this._engine = settings.engine ? settings.engine : DefaultEngine;
     // Preload sources but silence errors; they will be thrown during execution
     this._sources = this.parseSources(defaultSource);
     this._sources.catch(() => null);
+    this._options = settings.options ? settings.options : {};
   }
 
   /**
@@ -28,7 +29,7 @@ export default class ComunicaEngine {
     const sources = await (source ? this.parseSources(source) : this._sources);
     if (sources.length !== 0) {
       // Execute the query and yield the results
-      const queryResult = await this._engine.query(sparql, { sources });
+      const queryResult = await this._engine.query(sparql, { sources, ...this._options });
       yield* this.streamToAsyncIterable(queryResult.bindingsStream);
     }
   }

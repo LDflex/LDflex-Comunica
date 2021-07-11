@@ -1,6 +1,6 @@
 import ComunicaEngine from '../src/ComunicaEngine';
 
-import { mockHttp } from './util';
+import { mockHttp, readAll } from './util';
 import { namedNode, defaultGraph, quad } from '@rdfjs/data-model';
 import { Store } from 'n3';
 import { Readable } from 'stream';
@@ -255,10 +255,3 @@ describe('An ComunicaEngine instance with a default source that errors', () => {
     await expect(readAll(result)).rejects.toThrow('my error');
   });
 });
-
-async function readAll(asyncIterator) {
-  const items = [];
-  for await (const item of asyncIterator)
-    items.push(item);
-  return items;
-}

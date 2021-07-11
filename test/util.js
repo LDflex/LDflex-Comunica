@@ -18,3 +18,10 @@ export function mockHttp() {
     recordFailedRequests: true,
   });
 }
+
+export async function readAll(asyncIterator) {
+  const items = [];
+  for await (const item of asyncIterator)
+    items.push(item);
+  return items;
+}
