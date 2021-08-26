@@ -44,7 +44,7 @@
     "mkdirp": "^1.0.4",
     "n3": "^1.10.0",
     "semantic-release": "^17.4.2",
-    "setup-polly-jest": "^0.9.1"
+    "setup-polly-jest": "^0.10.0"
   },
   "scripts": {
     "build:engine": "mkdirp lib && comunica-compile-config config/config-default.json > lib/comunica-engine.js",
