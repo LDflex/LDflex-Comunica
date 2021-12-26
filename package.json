@@ -37,6 +37,7 @@
     "eslint-plugin-jest": "^25.3.0",
     "husky": "^7.0.4",
     "jest": "^27.4.5",
+    "ldflex": "^2.13.0",
     "mkdirp": "^1.0.4",
     "n3": "^1.12.2",
     "semantic-release": "^18.0.1",
