@@ -123,30 +123,6 @@ describe('An ComunicaEngine instance without default source', () => {
     await expect(readAll(result)).rejects.toThrow('Parse error');
   });
 
-  it('does not support INSERT queries', async () => {
-    const store = new Store();
-    const result = engine.execute('INSERT DATA { <http://a> <http://b> <http://c> }', store);
-    const data = await readAll(result);
-    expect(data).toEqual([]);
-    expect(store.has(quad(
-      namedNode('http://a'),
-      namedNode('http://b'),
-      namedNode('http://c'),
-    ))).toBe(true);
-  });
-
-  it('does not support DELETE queries', async () => {
-    const store = new Store();
-    const result = engine.execute(' delete data { <http://a> <http://b> <http://c> }', store);
-    const data = await readAll(result);
-    expect(data).toEqual([]);
-    expect(store.has(quad(
-      namedNode('http://a'),
-      namedNode('http://b'),
-      namedNode('http://c'),
-    ))).toBe(false);
-  });
-
   it('reads an ended stream', async () => {
     const stream = new Readable();
     stream.push(null);

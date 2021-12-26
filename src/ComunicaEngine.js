@@ -14,6 +14,7 @@ export default class ComunicaEngine {
     this._engine = settings.engine ? settings.engine : newEngine();
     // Preload sources but silence errors; they will be thrown during execution
     this._sources = this.parseSources(defaultSource);
+    this._destination = settings.destination ? this.parseSources(settings.destination) : this._sources;
     this._sources.catch(() => null);
     this._options = settings.options ? settings.options : {};
   }
@@ -41,8 +42,11 @@ export default class ComunicaEngine {
    */
   async* executeUpdate(sparql, source) {
     // Load the sources if passed, the default sources otherwise
-    const sources = await (source ? this.parseSources(source) : this._sources);
+    let sources = await (source ? this.parseSources(source) : this._destination);
     if (sources.length !== 0) {
+      // Update queries can only handle a single source
+      if (sources.length > 1)
+        sources = [sources[0]];
       // Execute the query and yield the results
       const queryResult = await this._engine.query(sparql, { sources, ...this._options });
       if (queryResult.type !== 'update')
