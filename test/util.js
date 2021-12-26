@@ -1,3 +1,5 @@
+/** @jest-environment setup-polly-jest/jest-environment-node */
+
 import { resolve } from 'path';
 import { Polly } from '@pollyjs/core';
 import { setupPolly } from 'setup-polly-jest';
@@ -12,8 +14,8 @@ Polly.register(NodeHttpAdapter);
 // Mocks HTTP requests using Polly.JS
 export function mockHttp() {
   return setupPolly({
-    adapters: ['node-http'],
-    persister: 'fs',
+    adapters: [NodeHttpAdapter],
+    persister: FSPersister,
     persisterOptions: { fs: { recordingsDir } },
     recordFailedRequests: true,
   });

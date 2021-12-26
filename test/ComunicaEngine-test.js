@@ -1,3 +1,6 @@
+/** @jest-environment setup-polly-jest/jest-environment-node */
+
+
 import ComunicaEngine from '../src/ComunicaEngine';
 
 import { mockHttp, readAll } from './util';
