@@ -124,15 +124,27 @@ describe('An ComunicaEngine instance without default source', () => {
   });
 
   it('does not support INSERT queries', async () => {
-    const result = engine.execute('INSERT DATA { <a> <b> <c> }', PROFILE_URL);
-    await expect(readAll(result)).rejects
-      .toThrow('SPARQL UPDATE queries are unsupported, received: INSERT DATA { <a> <b> <c> }');
+    const store = new Store();
+    const result = engine.execute('INSERT DATA { <http://a> <http://b> <http://c> }', store);
+    const data = await readAll(result);
+    expect(data).toEqual([]);
+    expect(store.has(quad(
+      namedNode('http://a'),
+      namedNode('http://b'),
+      namedNode('http://c'),
+    ))).toBe(true);
   });
 
   it('does not support DELETE queries', async () => {
-    const result = engine.execute(' delete data { <a> <b> <c> }', PROFILE_URL);
-    await expect(readAll(result)).rejects
-      .toThrow('SPARQL UPDATE queries are unsupported, received:  delete data { <a> <b> <c> }');
+    const store = new Store();
+    const result = engine.execute(' delete data { <http://a> <http://b> <http://c> }', store);
+    const data = await readAll(result);
+    expect(data).toEqual([]);
+    expect(store.has(quad(
+      namedNode('http://a'),
+      namedNode('http://b'),
+      namedNode('http://c'),
+    ))).toBe(false);
   });
 
   it('reads an ended stream', async () => {

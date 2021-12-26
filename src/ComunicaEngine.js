@@ -22,15 +22,17 @@ export default class ComunicaEngine {
    * Creates an asynchronous iterable of results for the given SPARQL query.
    */
   async* execute(sparql, source) {
-    if ((/^\s*(?:INSERT|DELETE)/i).test(sparql))
+    if ((/^\s*(?:INSERT|DELETE)/i).test(sparql)) {
       yield* this.executeUpdate(sparql, source);
-
-    // Load the sources if passed, the default sources otherwise
-    const sources = await (source ? this.parseSources(source) : this._sources);
-    if (sources.length !== 0) {
-      // Execute the query and yield the results
-      const queryResult = await this._engine.query(sparql, { sources, ...this._options });
-      yield* this.streamToAsyncIterable(queryResult.bindingsStream);
+    }
+    else {
+      // Load the sources if passed, the default sources otherwise
+      const sources = await (source ? this.parseSources(source) : this._sources);
+      if (sources.length !== 0) {
+        // Execute the query and yield the results
+        const queryResult = await this._engine.query(sparql, { sources, ...this._options });
+        yield* this.streamToAsyncIterable(queryResult.bindingsStream);
+      }
     }
   }
 
@@ -38,7 +40,17 @@ export default class ComunicaEngine {
    * Creates an asynchronous iterable with the results of the SPARQL UPDATE query.
    */
   async* executeUpdate(sparql, source) {
-    throw new Error(`SPARQL UPDATE queries are unsupported, received: ${sparql}`);
+    // Load the sources if passed, the default sources otherwise
+    const sources = await (source ? this.parseSources(source) : this._sources);
+    if (sources.length !== 0) {
+      // Execute the query and yield the results
+      const queryResult = await this._engine.query(sparql, { sources, ...this._options });
+      if (queryResult.type !== 'update')
+        throw new Error(`Update query returned unexpected result type: ${queryResult.type}`);
+
+      // Resolves when the update is complete
+      return queryResult.updateResult;
+    }
   }
 
   /**
@@ -160,3 +172,5 @@ function assign(props, orig) {
 async function flattenAsync(array) {
   return [].concat(...(await Promise.all(array)));
 }
+
+// function noop() { /* empty */ }
