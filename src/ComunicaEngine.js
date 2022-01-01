@@ -176,5 +176,3 @@ function assign(props, orig) {
 async function flattenAsync(array) {
   return [].concat(...(await Promise.all(array)));
 }
-
-// function noop() { /* empty */ }
