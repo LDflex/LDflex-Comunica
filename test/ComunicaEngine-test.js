@@ -123,18 +123,6 @@ describe('An ComunicaEngine instance without default source', () => {
     await expect(readAll(result)).rejects.toThrow('Parse error');
   });
 
-  it('does not support INSERT queries', async () => {
-    const result = engine.execute('INSERT DATA { <a> <b> <c> }', PROFILE_URL);
-    await expect(readAll(result)).rejects
-      .toThrow('SPARQL UPDATE queries are unsupported, received: INSERT DATA { <a> <b> <c> }');
-  });
-
-  it('does not support DELETE queries', async () => {
-    const result = engine.execute(' delete data { <a> <b> <c> }', PROFILE_URL);
-    await expect(readAll(result)).rejects
-      .toThrow('SPARQL UPDATE queries are unsupported, received:  delete data { <a> <b> <c> }');
-  });
-
   it('reads an ended stream', async () => {
     const stream = new Readable();
     stream.push(null);
