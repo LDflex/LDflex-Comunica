@@ -1,4 +1,4 @@
-import DefaultEngine from '../lib/comunica-engine';
+import { newEngine } from '@comunica/actor-init-sparql-solid';
 
 /**
  * Asynchronous iterator wrapper for the Comunica SPARQL query engine.
@@ -11,7 +11,7 @@ export default class ComunicaEngine {
    * or an array with any of these.
    */
   constructor(defaultSource, settings = {}) {
-    this._engine = settings.engine ? settings.engine : DefaultEngine;
+    this._engine = settings.engine ? settings.engine : newEngine();
     // Preload sources but silence errors; they will be thrown during execution
     this._sources = this.parseSources(defaultSource);
     this._sources.catch(() => null);

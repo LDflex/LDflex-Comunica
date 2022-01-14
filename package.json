@@ -19,10 +19,6 @@
     "src",
     "lib"
   ],
-  "dependencies": {
-    "@comunica/actor-http-solid-auth-fetch": "^1.2.0",
-    "@comunica/actor-init-sparql": "^1.22.3"
-  },
   "peerDependencies": {
     "ldflex": "^2.0.0"
   },
@@ -47,9 +43,7 @@
     "setup-polly-jest": "^0.10.0"
   },
   "scripts": {
-    "build:engine": "mkdirp lib && comunica-compile-config config/config-default.json > lib/comunica-engine.js",
-    "build:lib": "babel src --out-dir lib",
-    "build": "npm run build:lib && npm run build:engine",
+    "build": "babel src --out-dir lib",
     "jest": "jest",
     "lint": "eslint src test",
     "prepublishOnly": "npm run build",
@@ -73,5 +67,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "@comunica/actor-init-sparql-solid": "^1.0.1"
   }
 }
