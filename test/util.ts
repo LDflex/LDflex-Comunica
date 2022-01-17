@@ -21,8 +21,8 @@ export function mockHttp() {
   });
 }
 
-export async function readAll(asyncIterator) {
-  const items = [];
+export async function readAll<T>(asyncIterator: AsyncIterableIterator<T>): Promise<T[]> {
+  const items: T[] = [];
   for await (const item of asyncIterator)
     items.push(item);
   return items;

@@ -1,28 +1,54 @@
 import { newEngine } from '@comunica/actor-init-sparql-solid';
+import type { ActorInitSparql } from '@comunica/actor-init-sparql';
+import type { DataSources, IDataSource } from '@comunica/bus-rdf-resolve-quad-pattern';
+import type * as RDF from '@rdfjs/types';
+import type { BindingsStream, Bindings } from '@comunica/types';
+
+export type DataSource = URL | RDF.NamedNode | IDataSource;
+
+// Change over to this type once https://github.com/microsoft/TypeScript/issues/47208#issuecomment-1014128087 is resolved
+// export type RawDataSources = DataSource | Promise<RawDataSources> | RawDataSources[];
+export type MaybePromiseArray<T> = T | T[] | Promise<T>;
+export type NestPromiseArray<T> = MaybePromiseArray<MaybePromiseArray<MaybePromiseArray<MaybePromiseArray<MaybePromiseArray<T>>>>>
+export type RawDataSources = NestPromiseArray<DataSource>;
+
+export interface IEngineSettings {
+  engine?: ActorInitSparql;
+  destination?: RawDataSources;
+  options?: any;
+}
 
 /**
  * Asynchronous iterator wrapper for the Comunica SPARQL query engine.
  */
 export default class ComunicaEngine {
+  private _sources: Promise<DataSources>;
+
+  private _engine: ActorInitSparql;
+
+  private _options: any;
+
+  private _destination: Promise<DataSources>;
+
   /**
    * Create a ComunicaEngine to query the given default source.
    *
    * The default source can be a single URL, an RDF/JS Datasource,
    * or an array with any of these.
    */
-  constructor(defaultSource, settings = {}) {
-    this._engine = settings.engine ? settings.engine : newEngine();
+  constructor(defaultSource?: RawDataSources, settings: IEngineSettings = {}) {
+    this._engine = settings.engine ?? newEngine();
     // Preload sources but silence errors; they will be thrown during execution
     this._sources = this.parseSources(defaultSource);
     this._destination = settings.destination ? this.parseSources(settings.destination) : this._sources;
     this._sources.catch(() => null);
-    this._options = settings.options ? settings.options : {};
+    this._options = settings.options ?? {};
   }
 
   /**
    * Creates an asynchronous iterable of results for the given SPARQL query.
    */
-  async* execute(sparql, source) {
+  async* execute(sparql: string, source?: RawDataSources): AsyncIterableIterator<Bindings> {
     if ((/^\s*(?:INSERT|DELETE)/i).test(sparql)) {
       yield* this.executeUpdate(sparql, source);
     }
@@ -32,6 +58,9 @@ export default class ComunicaEngine {
       if (sources.length !== 0) {
         // Execute the query and yield the results
         const queryResult = await this._engine.query(sparql, { sources, ...this._options });
+        if (queryResult.type !== 'bindings')
+          throw new Error(`Query returned unexpected result type: ${queryResult.type}`);
+
         yield* this.streamToAsyncIterable(queryResult.bindingsStream);
       }
     }
@@ -40,7 +69,7 @@ export default class ComunicaEngine {
   /**
    * Creates an asynchronous iterable with the results of the SPARQL UPDATE query.
    */
-  async* executeUpdate(sparql, source) {
+  async* executeUpdate(sparql: string, source?: RawDataSources): AsyncIterableIterator<never> {
     // Load the sources if passed, the default sources otherwise
     let sources = await (source ? this.parseSources(source) : this._destination);
     if (sources.length !== 0) {
@@ -60,47 +89,44 @@ export default class ComunicaEngine {
   /**
    * Parses the source(s) into an array of Comunica sources.
    */
-  async parseSources(source) {
-    let sources = await source;
+  private async parseSources(source?: RawDataSources): Promise<DataSources> {
+    const sources = await source;
     if (!sources)
       return [];
 
-    // Transform URLs or terms into strings
-    if (sources instanceof URL)
-      sources = sources.href;
-    else if (sources.termType === 'NamedNode')
-      sources = sources.value;
+    // Flatten recursive calls to this function
+    if (Array.isArray(sources))
+      return flattenAsync(sources.map(s => this.parseSources(s)));
 
     // Strip the fragment off a URI
     if (typeof sources === 'string')
-      sources = [sources.replace(/#.*/, '')];
-    // Flatten recursive calls to this function
-    else if (Array.isArray(sources))
-      sources = await flattenAsync(sources.map(s => this.parseSources(s)));
-    // Needs to be after the string check since those also have a match functions
-    else if (typeof sources.match === 'function')
-      sources = [assign({ type: 'rdfjsSource' }, sources)];
-    // Wrap a single source in an array
-    else if (typeof source.value === 'string')
-      sources = [sources];
-    // Error on unsupported sources
-    else
-      throw new Error(`Unsupported source: ${source}`);
+      return [{ value: sources.replace(/#.*/, '') }];
 
-    // Add Comunica source details
-    return sources.map(src => ({
-      value: src.value || src,
-      type: src.type,
-    }));
+    // Transform URLs or terms into strings
+    if (sources instanceof URL)
+      return [{ value: sources.href.replace(/#.*/, '') }];
+    if ('termType' in sources && sources.termType === 'NamedNode')
+      return [{ value: sources.value.replace(/#.*/, '') }];
+
+    // Needs to be after the string check since those also have a match functions
+    if ('match' in sources && typeof sources.match === 'function')
+      return [{ value: sources, type: 'rdfjsSource' }];
+
+    // Wrap a single source in an array
+    if ('value' in sources && typeof sources.value === 'string')
+      return [sources];
+
+    // Error on unsupported sources
+    throw new Error(`Unsupported source: ${sources}`);
   }
 
   /**
    * Transforms the readable into an asynchronously iterable object
    */
-  streamToAsyncIterable(readable) {
+  private streamToAsyncIterable(readable: BindingsStream): AsyncIterableIterator<Bindings> {
     let done = false;
-    let pendingError;
-    let pendingPromise;
+    let pendingError: Error | undefined;
+    let pendingPromise: { resolve: (bindings: IteratorResult<Bindings>) => void, reject: (err: Error) => void } | null;
 
     readable.on('readable', settlePromise);
     readable.on('error', finish);
@@ -111,7 +137,7 @@ export default class ComunicaEngine {
       [Symbol.asyncIterator]() { return this; },
     };
 
-    function trackPromise(resolve, reject) {
+    function trackPromise(resolve: (bindings: IteratorResult<Bindings>) => void, reject: (err: Error) => void) {
       pendingPromise = { resolve, reject };
       settlePromise();
     }
@@ -131,7 +157,7 @@ export default class ComunicaEngine {
       }
     }
 
-    function finish(error) {
+    function finish(error?: Error) {
       // Finish with or without an error
       if (!pendingError) {
         done = true;
@@ -140,6 +166,7 @@ export default class ComunicaEngine {
       // Try to emit the result
       if (pendingPromise) {
         if (!pendingError)
+          // @ts-ignore
           pendingPromise.resolve({ done });
         else
           pendingPromise.reject(pendingError);
@@ -156,23 +183,12 @@ export default class ComunicaEngine {
    * Removes the given document (or all, if not specified) from the cache,
    * such that fresh results are obtained next time.
    */
-  async clearCache(document) {
+  async clearCache(document: string) {
     await this._engine.invalidateHttpCache(document);
   }
 }
 
-/**
- * Extends Object.assign by also copying prototype methods
- * @param {Object} props To add to the object
- * @param {Object} orig Original Object
- * @returns Copy of original object with added props
- */
-function assign(props, orig) {
-  // https://stackoverflow.com/questions/41474986/how-to-clone-a-javascript-es6-class-instance
-  return Object.assign(Object.create(orig), { ...orig, ...props });
-}
-
 // Flattens the given array one level deep
-async function flattenAsync(array) {
-  return [].concat(...(await Promise.all(array)));
+async function flattenAsync<T>(array: Promise<T[]>[]) {
+  return ([] as T[]).concat(...(await Promise.all(array)));
 }

@@ -68,8 +68,8 @@ describe('A ComunicaEngine instance without default source', () => {
 
 
 describe('A ComunicaEngine instance with one default source', () => {
-  let engine;
-  let store;
+  let engine: ComunicaEngine;
+  let store: Store;
 
   beforeEach(() => {
     store = new Store();
@@ -106,9 +106,9 @@ describe('A ComunicaEngine instance with one default source', () => {
 
 
 describe('A ComunicaEngine instance with one default source and different update source', () => {
-  let engine;
-  let store;
-  let updateStore;
+  let engine: ComunicaEngine;
+  let store: Store;
+  let updateStore: Store;
 
   beforeEach(() => {
     store = new Store();
@@ -127,7 +127,7 @@ describe('A ComunicaEngine instance with one default source and different update
       namedNode('http://b'),
       namedNode('http://c'),
     ))).toBe(true);
-    expect(store.getQuads()).toEqual([]);
+    expect(store.getQuads(null, null, null, null)).toEqual([]);
   });
 
   it('supports DELETE queries', async () => {
@@ -139,12 +139,12 @@ describe('A ComunicaEngine instance with one default source and different update
       namedNode('http://b'),
       namedNode('http://c'),
     ))).toBe(false);
-    expect(store.getQuads()).toEqual([]);
+    expect(store.getQuads(null, null, null, null)).toEqual([]);
   });
 
   it('executeUpdate errors on SELECT query', async () => {
     const result = engine.executeUpdate(SELECT_TYPES);
     await expect(readAll(result)).rejects.toThrow('Update query returned unexpected result type: bindings');
-    expect(store.getQuads()).toEqual([]);
+    expect(store.getQuads(null, null, null, null)).toEqual([]);
   });
 });

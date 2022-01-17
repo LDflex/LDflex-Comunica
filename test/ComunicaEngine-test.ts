@@ -101,11 +101,15 @@ describe('An ComunicaEngine instance without default source', () => {
     // Verify correct usage of source
     expect(source.match).toHaveBeenCalled();
     expect(source.match.mock.calls[0]).toHaveLength(4);
+    // @ts-ignore
     expect(source.match.mock.calls[0][0]).toBe(undefined);
+    // @ts-ignore
     expect(source.match.mock.calls[0][1]
       .equals(namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')))
       .toBe(true);
+    // @ts-ignore
     expect(source.match.mock.calls[0][2]).toBe(undefined);
+    // @ts-ignore
     expect(source.match.mock.calls[0][3]
       .equals(defaultGraph()))
       .toBe(true);
@@ -113,6 +117,7 @@ describe('An ComunicaEngine instance without default source', () => {
 
   it('throws an error with an unsupported source', async () => {
     const source = { toString: () => 'my source' };
+    // @ts-expect-error
     const result = engine.execute(SELECT_TYPES, source);
     await expect(readAll(result)).rejects
       .toThrow('Unsupported source: my source');
@@ -126,12 +131,14 @@ describe('An ComunicaEngine instance without default source', () => {
   it('reads an ended stream', async () => {
     const stream = new Readable();
     stream.push(null);
+    // @ts-expect-error
     const result = engine.streamToAsyncIterable(stream);
     expect(await readAll(result)).toHaveLength(0);
   });
 
   it('reads a stream that ends immediately', async () => {
     const stream = new Readable();
+    // @ts-expect-error
     const result = engine.streamToAsyncIterable(stream);
     stream.push(null);
     await new Promise(resolve => setImmediate(resolve));
@@ -141,6 +148,7 @@ describe('An ComunicaEngine instance without default source', () => {
   it('throws an error when the stream errors before reading starts', async () => {
     const stream = new Readable();
     stream._read = () => {};
+    // @ts-expect-error
     const result = engine.streamToAsyncIterable(stream);
     stream.emit('error', new Error('my error'));
     stream.emit('error', new Error('my other error'));
@@ -150,15 +158,17 @@ describe('An ComunicaEngine instance without default source', () => {
   it('throws an error when the stream errors after reading has started', async () => {
     const stream = new Readable();
     stream._read = () => {};
+    // @ts-expect-error
     const result = engine.streamToAsyncIterable(stream);
     setImmediate(() => stream.emit('error', new Error('my error')));
     await expect(readAll(result)).rejects.toThrow('my error');
   });
 
   it('clears the cache for a given document', async () => {
-    // set up mock
+    // @ts-ignore set up mock
     const internalEngine = engine._engine;
     const invalidateHttpCache = jest.fn();
+    // @ts-ignore
     engine._engine = { invalidateHttpCache };
 
     // check success call
@@ -171,7 +181,7 @@ describe('An ComunicaEngine instance without default source', () => {
     invalidateHttpCache.mockReturnValue(Promise.reject(new Error('my error')));
     await expect(engine.clearCache(PROFILE_URL)).rejects.toThrow('my error');
 
-    // remove mock
+    // @ts-ignore remove mock
     engine._engine = internalEngine;
   });
 });
@@ -244,5 +254,14 @@ describe('An ComunicaEngine instance with a default source that errors', () => {
   it('throws the error upon execution', async () => {
     const result = engine.execute(SELECT_TYPES);
     await expect(readAll(result)).rejects.toThrow('my error');
+  });
+});
+
+describe('Erroring on unsupported query types', () => {
+  const engine = new ComunicaEngine();
+
+  it('throws the error upon execution', async () => {
+    const result = engine.execute('CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }', PROFILE_URL);
+    await expect(readAll(result)).rejects.toThrow('Query returned unexpected result type: quads');
   });
 });
