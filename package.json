@@ -13,10 +13,11 @@
   },
   "lsd:module": true,
   "main": "lib/index.js",
-  "module": "src/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "sideEffects": false,
   "files": [
-    "src",
+    "dist",
     "lib"
   ],
   "peerDependencies": {
@@ -54,7 +55,7 @@
     "typescript": "^4.5.4"
   },
   "scripts": {
-    "build": "tsc && babel src --out-dir lib",
+    "build": "tsc && babel dist --out-dir lib",
     "jest": "jest",
     "lint": "eslint src test --ext .ts",
     "lint:fix": "eslint src test --ext .ts --fix",
