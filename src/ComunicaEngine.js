@@ -13,21 +13,28 @@ export default class ComunicaEngine {
   constructor(defaultSource, settings = {}) {
     this._engine = settings.engine ? settings.engine : newEngine();
     // Preload sources but silence errors; they will be thrown during execution
-    this._sources = this.parseSources(defaultSource);
-    this._sources.catch(() => null);
+    this._sources = this.parseSourcesSilent(defaultSource);
+    this._destination = settings.destination && this.parseSourcesSilent(settings.destination);
     this._options = settings.options ? settings.options : {};
+  }
+
+  parseSourcesSilent(sources) {
+    const parsedSources = this.parseSources(sources);
+    parsedSources.catch(() => null);
+    return parsedSources;
   }
 
   /**
    * Creates an asynchronous iterable of results for the given SPARQL query.
    */
   async* execute(sparql, source) {
-    if ((/^\s*(?:INSERT|DELETE)/i).test(sparql))
-      yield* this.executeUpdate(sparql, source);
-
     // Load the sources if passed, the default sources otherwise
-    const sources = await (source ? this.parseSources(source) : this._sources);
-    if (sources.length !== 0) {
+    const sources = await this.parseSources(source, this._sources);
+
+    if ((/^\s*(?:INSERT|DELETE)/i).test(sparql)) {
+      yield* this.executeUpdate(sparql, source);
+    }
+    else if (sources.length !== 0) {
       // Execute the query and yield the results
       const queryResult = await this._engine.query(sparql, { sources, ...this._options });
       yield* this.streamToAsyncIterable(queryResult.bindingsStream);
@@ -38,16 +45,43 @@ export default class ComunicaEngine {
    * Creates an asynchronous iterable with the results of the SPARQL UPDATE query.
    */
   async* executeUpdate(sparql, source) {
-    throw new Error(`SPARQL UPDATE queries are unsupported, received: ${sparql}`);
+    let sources;
+    // Need to await the destination
+    const destination = await this._destination;
+
+    // Set the appropriate destination
+    if (!source && destination) {
+      if (destination.length !== 1)
+        throw new Error(`Destination must be a single source, not ${destination.length}`);
+
+      sources = destination;
+    }
+    else {
+      // Load the sources if passed, the default sources otherwise
+      const _sources = await this.parseSources(source, this._sources);
+
+      if (_sources.length === 0)
+        throw new Error('At least one source must be specified: Updates are inserted into the first given data source if no destination is specified, or if using explicit sources for query');
+
+      sources = [_sources[0]];
+    }
+
+    // Execute the query and yield the results
+    const queryResult = await this._engine.query(sparql, { sources, ...this._options });
+    if (queryResult.type !== 'update')
+      throw new Error(`Update query returned unexpected result type: ${queryResult.type}`);
+
+    // Resolves when the update is complete
+    return queryResult.updateResult;
   }
 
   /**
    * Parses the source(s) into an array of Comunica sources.
    */
-  async parseSources(source) {
+  async parseSources(source, defaultSources = []) {
     let sources = await source;
     if (!sources)
-      return [];
+      return defaultSources;
 
     // Transform URLs or terms into strings
     if (sources instanceof URL)
