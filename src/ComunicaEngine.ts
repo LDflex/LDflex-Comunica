@@ -12,9 +12,25 @@ export type MaybePromiseArray<T> = T | T[] | Promise<T>;
 export type NestPromiseArray<T> = MaybePromiseArray<MaybePromiseArray<MaybePromiseArray<MaybePromiseArray<MaybePromiseArray<T>>>>>
 export type RawDataSources = NestPromiseArray<DataSource>;
 
+/**
+ * Settings for the ldflex-comunica engine
+ */
 export interface IEngineSettings {
+  /**
+   * The comunica engine to use
+   * @default actor-init-sparql-solid
+   */
   engine?: ActorInitSparql;
+  /**
+   * The destination to use
+   * @default source The first source given
+   */
   destination?: RawDataSources;
+  /**
+   * The context options to give to
+   * the comunica engine
+   * @default {}
+   */
   options?: any;
 }
 
