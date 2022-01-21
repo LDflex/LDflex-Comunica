@@ -28,7 +28,7 @@ export default class ComunicaEngine {
 
   private _options: any;
 
-  private _destination: Promise<DataSources>;
+  private _destination: Promise<DataSources> | undefined;
 
   /**
    * Create a ComunicaEngine to query the given default source.
@@ -39,30 +39,34 @@ export default class ComunicaEngine {
   constructor(defaultSource?: RawDataSources, settings: IEngineSettings = {}) {
     this._engine = settings.engine ?? newEngine();
     // Preload sources but silence errors; they will be thrown during execution
-    this._sources = this.parseSources(defaultSource);
-    this._destination = settings.destination ? this.parseSources(settings.destination) : this._sources;
-    this._sources.catch(() => null);
+    this._sources = this.parseSourcesSilent(defaultSource);
+    this._destination = settings.destination ? this.parseSourcesSilent(settings.destination) : undefined;
     this._options = settings.options ?? {};
+  }
+
+  parseSourcesSilent(sources?: RawDataSources) {
+    const parsedSources = this.parseSources(sources);
+    parsedSources.catch(() => null);
+    return parsedSources;
   }
 
   /**
    * Creates an asynchronous iterable of results for the given SPARQL query.
    */
   async* execute(sparql: string, source?: RawDataSources): AsyncIterableIterator<Bindings> {
+    // Load the sources if passed, the default sources otherwise
+    const sources = await this.parseSources(source, this._sources);
+
     if ((/^\s*(?:INSERT|DELETE)/i).test(sparql)) {
       yield* this.executeUpdate(sparql, source);
     }
-    else {
-      // Load the sources if passed, the default sources otherwise
-      const sources = await (source ? this.parseSources(source) : this._sources);
-      if (sources.length !== 0) {
-        // Execute the query and yield the results
-        const queryResult = await this._engine.query(sparql, { sources, ...this._options });
-        if (queryResult.type !== 'bindings')
-          throw new Error(`Query returned unexpected result type: ${queryResult.type}`);
+    else if (sources.length !== 0) {
+      // Execute the query and yield the results
+      const queryResult = await this._engine.query(sparql, { sources, ...this._options });
+      if (queryResult.type !== 'bindings')
+        throw new Error(`Query returned unexpected result type: ${queryResult.type}`);
 
-        yield* this.streamToAsyncIterable(queryResult.bindingsStream);
-      }
+      yield* this.streamToAsyncIterable(queryResult.bindingsStream);
     }
   }
 
@@ -70,29 +74,43 @@ export default class ComunicaEngine {
    * Creates an asynchronous iterable with the results of the SPARQL UPDATE query.
    */
   async* executeUpdate(sparql: string, source?: RawDataSources): AsyncIterableIterator<never> {
-    // Load the sources if passed, the default sources otherwise
-    let sources = await (source ? this.parseSources(source) : this._destination);
-    if (sources.length !== 0) {
-      // Update queries can only handle a single source
-      if (sources.length > 1)
-        sources = [sources[0]];
-      // Execute the query and yield the results
-      const queryResult = await this._engine.query(sparql, { sources, ...this._options });
-      if (queryResult.type !== 'update')
-        throw new Error(`Update query returned unexpected result type: ${queryResult.type}`);
+    let sources: DataSources;
+    // Need to await the destination
+    const destination = await this._destination;
 
-      // Resolves when the update is complete
-      return queryResult.updateResult;
+    // Set the appropriate destination
+    if (!source && destination) {
+      if (destination.length !== 1)
+        throw new Error(`Destination must be a single source, not ${destination.length}`);
+
+      sources = destination;
     }
+    else {
+      // Load the sources if passed, the default sources otherwise
+      const _sources = await this.parseSources(source, this._sources);
+
+      if (_sources.length === 0)
+        throw new Error('At least one source must be specified: Updates are inserted into the first given data source if no destination is specified, or if using explicit sources for query');
+
+      sources = [_sources[0]];
+    }
+
+    // Execute the query and yield the results
+    const queryResult = await this._engine.query(sparql, { sources, ...this._options });
+    if (queryResult.type !== 'update')
+      throw new Error(`Update query returned unexpected result type: ${queryResult.type}`);
+
+    // Resolves when the update is complete
+    return queryResult.updateResult;
   }
 
   /**
    * Parses the source(s) into an array of Comunica sources.
    */
-  private async parseSources(source?: RawDataSources): Promise<DataSources> {
+  private async parseSources(source?: RawDataSources, defaultSources: Promise<DataSources> | DataSources = []): Promise<DataSources> {
     const sources = await source;
     if (!sources)
-      return [];
+      return defaultSources;
 
     // Flatten recursive calls to this function
     if (Array.isArray(sources))
