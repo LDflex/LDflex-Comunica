@@ -1,24 +1,73 @@
 import { newEngine } from '@comunica/actor-init-sparql-solid';
+import type { ActorInitSparql } from '@comunica/actor-init-sparql';
+import type { DataSources, IDataSource } from '@comunica/bus-rdf-resolve-quad-pattern';
+import type * as RDF from '@rdfjs/types';
+import type { BindingsStream, Bindings } from '@comunica/types';
+
+export type DataSource = URL | RDF.NamedNode | IDataSource;
+
+// Change over to this type once https://github.com/microsoft/TypeScript/issues/47208#issuecomment-1014128087 is resolved
+// export type RawDataSources = DataSource | Promise<RawDataSources> | RawDataSources[];
+export type MaybePromiseArray<T> = T | T[] | Promise<T>;
+export type NestPromiseArray<T> = MaybePromiseArray<MaybePromiseArray<MaybePromiseArray<MaybePromiseArray<MaybePromiseArray<T>>>>>
+export type RawDataSources = NestPromiseArray<DataSource>;
+
+/**
+ * Settings for the ldflex-comunica engine
+ */
+export interface EngineSettings {
+
+  /**
+   * The comunica engine to use
+   * @default actor-init-sparql-solid
+   */
+  engine?: ActorInitSparql;
+
+  /**
+   * The destination to use
+   * @default source The first source given
+   */
+  destination?: RawDataSources;
+
+  /**
+   * The context options to give to
+   * the comunica engine
+   * @default {}
+   */
+  options?: any;
+}
 
 /**
  * Asynchronous iterator wrapper for the Comunica SPARQL query engine.
  */
 export default class ComunicaEngine {
+  // @depricated - private parameter _sources to be renamed sources in next major version
+  private _sources: Promise<DataSources>;
+
+  // @depricated - private parameter _engine to be renamed engine in next major version
+  private _engine: ActorInitSparql;
+
+  // @depricated - private parameter _options to be renamed options in next major version
+  private _options: any;
+
+  // @depricated - private parameter _destination to be renamed destination in next major version
+  private _destination: Promise<DataSources> | undefined;
+
   /**
    * Create a ComunicaEngine to query the given default source.
    *
    * The default source can be a single URL, an RDF/JS Datasource,
    * or an array with any of these.
    */
-  constructor(defaultSource, settings = {}) {
-    this._engine = settings.engine ? settings.engine : newEngine();
+  constructor(defaultSource?: RawDataSources, settings: EngineSettings = {}) {
+    this._engine = settings.engine ?? newEngine();
     // Preload sources but silence errors; they will be thrown during execution
     this._sources = this.parseSourcesSilent(defaultSource);
-    this._destination = settings.destination && this.parseSourcesSilent(settings.destination);
-    this._options = settings.options ? settings.options : {};
+    this._destination = settings.destination ? this.parseSourcesSilent(settings.destination) : undefined;
+    this._options = settings.options ?? {};
   }
 
-  parseSourcesSilent(sources) {
+  parseSourcesSilent(sources?: RawDataSources) {
     const parsedSources = this.parseSources(sources);
     parsedSources.catch(() => null);
     return parsedSources;
@@ -27,7 +76,7 @@ export default class ComunicaEngine {
   /**
    * Creates an asynchronous iterable of results for the given SPARQL query.
    */
-  async* execute(sparql, source) {
+  async* execute(sparql: string, source?: RawDataSources): AsyncIterableIterator<Bindings> {
     // Load the sources if passed, the default sources otherwise
     const sources = await this.parseSources(source, this._sources);
 
@@ -37,6 +86,9 @@ export default class ComunicaEngine {
     else if (sources.length !== 0) {
       // Execute the query and yield the results
       const queryResult = await this._engine.query(sparql, { sources, ...this._options });
+      if (queryResult.type !== 'bindings')
+        throw new Error(`Query returned unexpected result type: ${queryResult.type}`);
+
       yield* this.streamToAsyncIterable(queryResult.bindingsStream);
     }
   }
@@ -44,8 +96,8 @@ export default class ComunicaEngine {
   /**
    * Creates an asynchronous iterable with the results of the SPARQL UPDATE query.
    */
-  async* executeUpdate(sparql, source) {
-    let sources;
+  async* executeUpdate(sparql: string, source?: RawDataSources): AsyncIterableIterator<never> {
+    let sources: DataSources;
     // Need to await the destination
     const destination = await this._destination;
 
@@ -78,47 +130,44 @@ export default class ComunicaEngine {
   /**
    * Parses the source(s) into an array of Comunica sources.
    */
-  async parseSources(source, defaultSources = []) {
-    let sources = await source;
+  private async parseSources(source?: RawDataSources, defaultSources: Promise<DataSources> | DataSources = []): Promise<DataSources> {
+    const sources = await source;
     if (!sources)
       return defaultSources;
 
-    // Transform URLs or terms into strings
-    if (sources instanceof URL)
-      sources = sources.href;
-    else if (sources.termType === 'NamedNode')
-      sources = sources.value;
+    // Flatten recursive calls to this function
+    if (Array.isArray(sources))
+      return flattenAsync(sources.map(s => this.parseSources(s)));
 
     // Strip the fragment off a URI
     if (typeof sources === 'string')
-      sources = [sources.replace(/#.*/, '')];
-    // Flatten recursive calls to this function
-    else if (Array.isArray(sources))
-      sources = await flattenAsync(sources.map(s => this.parseSources(s)));
-    // Needs to be after the string check since those also have a match functions
-    else if (typeof sources.match === 'function')
-      sources = [assign({ type: 'rdfjsSource' }, sources)];
-    // Wrap a single source in an array
-    else if (typeof source.value === 'string')
-      sources = [sources];
-    // Error on unsupported sources
-    else
-      throw new Error(`Unsupported source: ${source}`);
+      return [{ value: sources.replace(/#.*/, '') }];
 
-    // Add Comunica source details
-    return sources.map(src => ({
-      value: src.value || src,
-      type: src.type,
-    }));
+    // Transform URLs or terms into strings
+    if (sources instanceof URL)
+      return [{ value: sources.href.replace(/#.*/, '') }];
+    if ('termType' in sources && sources.termType === 'NamedNode')
+      return [{ value: sources.value.replace(/#.*/, '') }];
+
+    // Needs to be after the string check since those also have a match functions
+    if ('match' in sources && typeof sources.match === 'function')
+      return [{ value: sources, type: 'rdfjsSource' }];
+
+    // Wrap a single source in an array
+    if ('value' in sources && typeof sources.value === 'string')
+      return [sources];
+
+    // Error on unsupported sources
+    throw new Error(`Unsupported source: ${sources}`);
   }
 
   /**
    * Transforms the readable into an asynchronously iterable object
    */
-  streamToAsyncIterable(readable) {
+  private streamToAsyncIterable(readable: BindingsStream): AsyncIterableIterator<Bindings> {
     let done = false;
-    let pendingError;
-    let pendingPromise;
+    let pendingError: Error | undefined;
+    let pendingPromise: { resolve: (bindings: IteratorResult<Bindings>) => void, reject: (err: Error) => void } | null;
 
     readable.on('readable', settlePromise);
     readable.on('error', finish);
@@ -129,7 +178,7 @@ export default class ComunicaEngine {
       [Symbol.asyncIterator]() { return this; },
     };
 
-    function trackPromise(resolve, reject) {
+    function trackPromise(resolve: (bindings: IteratorResult<Bindings>) => void, reject: (err: Error) => void) {
       pendingPromise = { resolve, reject };
       settlePromise();
     }
@@ -149,7 +198,7 @@ export default class ComunicaEngine {
       }
     }
 
-    function finish(error) {
+    function finish(error?: Error) {
       // Finish with or without an error
       if (!pendingError) {
         done = true;
@@ -158,6 +207,7 @@ export default class ComunicaEngine {
       // Try to emit the result
       if (pendingPromise) {
         if (!pendingError)
+          // @ts-ignore
           pendingPromise.resolve({ done });
         else
           pendingPromise.reject(pendingError);
@@ -174,23 +224,12 @@ export default class ComunicaEngine {
    * Removes the given document (or all, if not specified) from the cache,
    * such that fresh results are obtained next time.
    */
-  async clearCache(document) {
+  async clearCache(document: string) {
     await this._engine.invalidateHttpCache(document);
   }
 }
 
-/**
- * Extends Object.assign by also copying prototype methods
- * @param {Object} props To add to the object
- * @param {Object} orig Original Object
- * @returns Copy of original object with added props
- */
-function assign(props, orig) {
-  // https://stackoverflow.com/questions/41474986/how-to-clone-a-javascript-es6-class-instance
-  return Object.assign(Object.create(orig), { ...orig, ...props });
-}
-
 // Flattens the given array one level deep
-async function flattenAsync(array) {
-  return [].concat(...(await Promise.all(array)));
+async function flattenAsync<T>(array: Promise<T[]>[]) {
+  return ([] as T[]).concat(...(await Promise.all(array)));
 }

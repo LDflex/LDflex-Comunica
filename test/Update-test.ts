@@ -66,8 +66,8 @@ describe('A ComunicaEngine instance without default source', () => {
 
 
 describe('A ComunicaEngine instance with one default source', () => {
-  let engine;
-  let store;
+  let engine: ComunicaEngine;
+  let store: Store;
 
   beforeEach(() => {
     store = new Store();
@@ -104,9 +104,9 @@ describe('A ComunicaEngine instance with one default source', () => {
 
 
 describe('A ComunicaEngine instance with one default source and different update source', () => {
-  let engine;
-  let store;
-  let updateStore;
+  let engine: ComunicaEngine;
+  let store: Store;
+  let updateStore: Store;
 
   beforeEach(() => {
     store = new Store();
@@ -125,7 +125,7 @@ describe('A ComunicaEngine instance with one default source and different update
       namedNode('http://b'),
       namedNode('http://c'),
     ))).toBe(true);
-    expect(store.getQuads()).toEqual([]);
+    expect(store.getQuads(null, null, null, null)).toEqual([]);
   });
 
   it('supports DELETE queries', async () => {
@@ -137,20 +137,20 @@ describe('A ComunicaEngine instance with one default source and different update
       namedNode('http://b'),
       namedNode('http://c'),
     ))).toBe(false);
-    expect(store.getQuads()).toEqual([]);
+    expect(store.getQuads(null, null, null, null)).toEqual([]);
   });
 
   it('executeUpdate errors on SELECT query', async () => {
     const result = engine.executeUpdate(SELECT_TYPES);
     await expect(readAll(result)).rejects.toThrow('Update query returned unexpected result type: bindings');
-    expect(store.getQuads()).toEqual([]);
+    expect(store.getQuads(null, null, null, null)).toEqual([]);
   });
 });
 
 describe('A ComunicaEngine instance with one default source and an empty destination', () => {
-  let engine;
-  let store;
-  let updateStore;
+  let engine: ComunicaEngine;
+  let store: Store;
+  let updateStore: Store;
 
   beforeEach(() => {
     store = new Store();
@@ -169,7 +169,7 @@ describe('A ComunicaEngine instance with one default source and an empty destina
       namedNode('http://b'),
       namedNode('http://c'),
     ))).toBe(true);
-    expect(store.getQuads()).toEqual([]);
+    expect(store.getQuads(null, null, null, null)).toEqual([]);
   });
 
   it('supports DELETE queries when explicit source is provided', async () => {
@@ -181,7 +181,7 @@ describe('A ComunicaEngine instance with one default source and an empty destina
       namedNode('http://b'),
       namedNode('http://c'),
     ))).toBe(false);
-    expect(store.getQuads()).toEqual([]);
+    expect(store.getQuads(null, null, null, null)).toEqual([]);
   });
 
   it('errors on INSERT queries when no explicit source is provided', async () => {
@@ -197,9 +197,9 @@ describe('A ComunicaEngine instance with one default source and an empty destina
 
 
 describe('A ComunicaEngine instance with one default source and 2 destinations', () => {
-  let engine;
-  let store;
-  let updateStore;
+  let engine: ComunicaEngine;
+  let store: Store;
+  let updateStore: Store;
 
   beforeEach(() => {
     store = new Store();
@@ -218,7 +218,7 @@ describe('A ComunicaEngine instance with one default source and 2 destinations',
       namedNode('http://b'),
       namedNode('http://c'),
     ))).toBe(true);
-    expect(store.getQuads()).toEqual([]);
+    expect(store.getQuads(null, null, null, null)).toEqual([]);
   });
 
   it('supports DELETE queries when explicit source is provided', async () => {
@@ -230,7 +230,7 @@ describe('A ComunicaEngine instance with one default source and 2 destinations',
       namedNode('http://b'),
       namedNode('http://c'),
     ))).toBe(false);
-    expect(store.getQuads()).toEqual([]);
+    expect(store.getQuads(null, null, null, null)).toEqual([]);
   });
 
   it('errors on INSERT queries when no explicit source is provided', async () => {

@@ -10,6 +10,10 @@
     ecmaVersion: 2018,
     sourceType: module
   },
+  parser: '@typescript-eslint/parser',
+  plugins: [
+    '@typescript-eslint/eslint-plugin'
+  ],
   rules: {
     // Best Practices
     accessor-pairs: error,

@@ -18,8 +18,8 @@ const KNOWS = namedNode('http://xmlns.com/foaf/0.1/knows');
 const BOB = namedNode('https://bob.org/profile/#me');
 
 describe('A ComunicaEngine instance with one default source', () => {
-  let alice;
-  let store;
+  let alice: any;
+  let store: any;
 
   beforeEach(() => {
     store = new Store();
