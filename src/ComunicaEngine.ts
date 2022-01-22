@@ -15,7 +15,7 @@ export type RawDataSources = NestPromiseArray<DataSource>;
 /**
  * Settings for the ldflex-comunica engine
  */
-export interface IEngineSettings {
+export interface EngineSettings {
 
   /**
    * The comunica engine to use
@@ -55,7 +55,7 @@ export default class ComunicaEngine {
    * The default source can be a single URL, an RDF/JS Datasource,
    * or an array with any of these.
    */
-  constructor(defaultSource?: RawDataSources, settings: IEngineSettings = {}) {
+  constructor(defaultSource?: RawDataSources, settings: EngineSettings = {}) {
     this._engine = settings.engine ?? newEngine();
     // Preload sources but silence errors; they will be thrown during execution
     this._sources = this.parseSourcesSilent(defaultSource);
