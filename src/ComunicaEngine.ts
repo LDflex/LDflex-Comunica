@@ -41,12 +41,16 @@ export interface EngineSettings {
  * Asynchronous iterator wrapper for the Comunica SPARQL query engine.
  */
 export default class ComunicaEngine {
+  // @depricated - private parameter _sources to be renamed sources in next major version
   private _sources: Promise<DataSources>;
 
+  // @depricated - private parameter _engine to be renamed engine in next major version
   private _engine: ActorInitSparql;
 
+  // @depricated - private parameter _options to be renamed options in next major version
   private _options: any;
 
+  // @depricated - private parameter _destination to be renamed destination in next major version
   private _destination: Promise<DataSources> | undefined;
 
   /**
