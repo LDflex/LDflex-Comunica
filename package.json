@@ -82,6 +82,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@comunica/actor-init-sparql-solid": "^1.0.2"
+    "@comunica/actor-init-sparql-solid": "^2.0.1"
   }
 }
