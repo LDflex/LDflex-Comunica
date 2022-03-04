@@ -30,7 +30,7 @@
     "@comunica/actor-http-proxy": "^1.22.1",
     "@comunica/actor-init-sparql": "^1.22.3",
     "@comunica/actor-init-sparql-file": "^1.22.3",
-    "@comunica/actor-init-sparql-rdfjs": "^1.22.3",
+    "@comunica/actor-init-sparql-rdfjs": "^2.0.1",
     "@comunica/bus-rdf-resolve-quad-pattern": "^1.22.0",
     "@pollyjs/adapter-node-http": "^6.0.4",
     "@pollyjs/core": "^6.0.4",
