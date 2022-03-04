@@ -1,10 +1,10 @@
 import ComunicaEngine from '../src/ComunicaEngine';
 
 import { readAll } from './util';
-import { namedNode, quad } from '@rdfjs/data-model';
 import { QueryEngine as LocalFileEngine } from '@comunica/query-sparql-file';
 import { QueryEngine as RdfjsFileEngine } from '@comunica/query-sparql-rdfjs';
-import { Store } from 'n3';
+import { Store, DataFactory } from 'n3';
+const { namedNode, quad } = DataFactory;
 import path from 'path';
 
 const SELECT_TYPES = `

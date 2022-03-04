@@ -4,8 +4,8 @@
 import ComunicaEngine from '../src/ComunicaEngine';
 
 import { mockHttp, readAll } from './util';
-import { namedNode, defaultGraph, quad } from '@rdfjs/data-model';
-import { Store } from 'n3';
+import { Store, DataFactory } from 'n3';
+const { namedNode, defaultGraph, quad } = DataFactory;
 import { Readable } from 'stream';
 
 const SELECT_TYPES = `

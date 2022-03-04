@@ -1,7 +1,6 @@
 import { QueryEngine } from '@comunica/query-sparql-solid';
-import type { DataSources, IDataSource } from '@comunica/bus-rdf-resolve-quad-pattern';
 import type * as RDF from '@rdfjs/types';
-import type { BindingsStream, Bindings } from '@comunica/types';
+import type { BindingsStream, Bindings, DataSources, IDataSource } from '@comunica/types';
 
 export type DataSource = URL | RDF.NamedNode | IDataSource;
 

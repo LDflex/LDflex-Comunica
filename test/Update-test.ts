@@ -1,9 +1,10 @@
 /** @jest-environment setup-polly-jest/jest-environment-node */
 
-import { namedNode, quad } from '@rdfjs/data-model';
-import { Store } from 'n3';
+import { Store, DataFactory } from 'n3';
 import ComunicaEngine from '../src/ComunicaEngine';
 import { mockHttp, readAll } from './util';
+
+const { namedNode, quad } = DataFactory;
 
 const SELECT_TYPES = `
   SELECT ?subject ?type WHERE {
