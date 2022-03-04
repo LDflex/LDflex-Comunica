@@ -149,7 +149,7 @@ export default class ComunicaEngine {
   /**
    * Transforms the readable into an asynchronously iterable object
    */
-  private streamToAsyncIterable(readable: BindingsStream): AsyncIterableIterator<RDF.Bindings> {
+  private streamToAsyncIterable(readable: BindingsStream): AsyncIterableIterator<Bindings> {
     let done = false;
     let pendingError: Error | undefined;
     let pendingPromise: { resolve: (bindings: IteratorResult<Bindings>) => void, reject: (err: Error) => void } | null;
