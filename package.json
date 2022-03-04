@@ -21,7 +21,7 @@
     "lib"
   ],
   "peerDependencies": {
-    "ldflex": "^2.0.0"
+    "ldflex": "^2.15.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.6",
