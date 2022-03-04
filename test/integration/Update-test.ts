@@ -1,9 +1,10 @@
 /** @jest-environment setup-polly-jest/jest-environment-node */
 
-import { namedNode, quad } from '@rdfjs/data-model';
-import { Store } from 'n3';
+import { Store, DataFactory } from 'n3';
 import ComunicaEngine from '../../src/ComunicaEngine';
 const { PathFactory } = require('ldflex');
+
+const { namedNode, quad } = DataFactory;
 
 // The JSON-LD context for resolving properties
 const context = {

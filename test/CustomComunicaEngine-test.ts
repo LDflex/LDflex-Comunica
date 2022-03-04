@@ -1,10 +1,10 @@
 import ComunicaEngine from '../src/ComunicaEngine';
 
 import { readAll } from './util';
-import { namedNode, quad } from '@rdfjs/data-model';
-import { newEngine as localFileEngine } from '@comunica/actor-init-sparql-file';
-import { newEngine as rdfjsFileEngine } from '@comunica/actor-init-sparql-rdfjs';
-import { Store } from 'n3';
+import { QueryEngine as LocalFileEngine } from '@comunica/query-sparql-file';
+import { QueryEngine as RdfjsFileEngine } from '@comunica/query-sparql-rdfjs';
+import { Store, DataFactory } from 'n3';
+const { namedNode, quad } = DataFactory;
 import path from 'path';
 
 const SELECT_TYPES = `
@@ -14,7 +14,7 @@ const SELECT_TYPES = `
 `;
 
 describe('An ComunicaEngine with local file engine configuration', () => {
-  const engine = new ComunicaEngine(path.join(__dirname, 'data', 'berners-lee.ttl'), { engine: localFileEngine() });
+  const engine = new ComunicaEngine(path.join(__dirname, 'data', 'berners-lee.ttl'), { engine: new LocalFileEngine() });
 
   it('yields results for a SELECT query with a string URL', async () => {
     const result = engine.execute(SELECT_TYPES);
@@ -24,7 +24,7 @@ describe('An ComunicaEngine with local file engine configuration', () => {
 
 describe('An ComunicaEngine with local file engine configuration & custom options', () => {
   const engine = new ComunicaEngine([], {
-    engine: localFileEngine(),
+    engine: new LocalFileEngine(),
     options: {
       sources: [path.join(__dirname, 'data', 'berners-lee.ttl')],
     },
@@ -46,7 +46,7 @@ describe('A ComunicaEngine instance with a custom rdfjs engine', () => {
     ),
   ]);
 
-  const engine = new ComunicaEngine([], { engine: rdfjsFileEngine() });
+  const engine = new ComunicaEngine([], { engine: new RdfjsFileEngine() });
 
   it('yields results for a SELECT query', async () => {
     const result = engine.execute(SELECT_TYPES, store);

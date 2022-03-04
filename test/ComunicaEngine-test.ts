@@ -4,8 +4,8 @@
 import ComunicaEngine from '../src/ComunicaEngine';
 
 import { mockHttp, readAll } from './util';
-import { namedNode, defaultGraph, quad } from '@rdfjs/data-model';
-import { Store } from 'n3';
+import { Store, DataFactory } from 'n3';
+const { namedNode, defaultGraph, quad } = DataFactory;
 import { Readable } from 'stream';
 
 const SELECT_TYPES = `
@@ -41,11 +41,11 @@ describe('An ComunicaEngine instance without default source', () => {
     // Check individual result binding
     const person = items[4];
     expect(person).toHaveProperty('size', 2);
-    expect(person.has('?subject')).toBe(true);
-    expect(person.has('?type')).toBe(true);
-    expect(person.get('?subject').equals(
+    expect(person.has('subject')).toBe(true);
+    expect(person.has('type')).toBe(true);
+    expect<boolean | undefined>(person.get('subject')?.equals(
       namedNode(PROFILE_URL))).toBe(true);
-    expect(person.get('?type').equals(
+    expect<boolean | undefined>(person.get('type')?.equals(
       namedNode('http://xmlns.com/foaf/0.1/Person'))).toBe(true);
   });
 
@@ -166,10 +166,10 @@ describe('An ComunicaEngine instance without default source', () => {
 
   it('clears the cache for a given document', async () => {
     // @ts-ignore set up mock
-    const internalEngine = engine._engine;
+    const internalEngine = engine.engine;
     const invalidateHttpCache = jest.fn();
     // @ts-ignore
-    engine._engine = { invalidateHttpCache };
+    engine.engine = { invalidateHttpCache };
 
     // check success call
     invalidateHttpCache.mockReturnValue(Promise.resolve('ignored'));
@@ -182,7 +182,7 @@ describe('An ComunicaEngine instance without default source', () => {
     await expect(engine.clearCache(PROFILE_URL)).rejects.toThrow('my error');
 
     // @ts-ignore remove mock
-    engine._engine = internalEngine;
+    engine.engine = internalEngine;
   });
 });
 
@@ -262,6 +262,6 @@ describe('Erroring on unsupported query types', () => {
 
   it('throws the error upon execution', async () => {
     const result = engine.execute('CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }', PROFILE_URL);
-    await expect(readAll(result)).rejects.toThrow('Query returned unexpected result type: quads');
+    await expect(readAll(result)).rejects.toThrow("Query result type 'bindings' was expected, while 'quads' was found.");
   });
 });
