@@ -1,7 +1,7 @@
 import ComunicaEngine from '../src/ComunicaEngine';
 
 import { readAll } from './util';
-import { newEngine as localFileEngine } from '@comunica/actor-init-sparql-file';
+import { QueryEngine as LocalFileEngine } from '@comunica/query-sparql-file';
 import path from 'path';
 
 const SELECT_TYPES = `
@@ -14,7 +14,7 @@ describe('An ComunicaEngine with local file engine configuration', () => {
   const engine = new ComunicaEngine(
     path.join(__dirname, 'data', 'jesse.ttl'),
     {
-      engine: localFileEngine(),
+      engine: new LocalFileEngine(),
       options: {
         baseIRI: 'http://example.org/',
       },
@@ -24,12 +24,12 @@ describe('An ComunicaEngine with local file engine configuration', () => {
   it('yields results for a SELECT query', async () => {
     const result = await readAll(engine.execute(SELECT_TYPES));
     expect(result).toHaveLength(1);
-    expect(result[0].get('?type').value).toEqual('http://example.org/Person');
+    expect<string | undefined>(result[0].get('type')?.value).toEqual('http://example.org/Person');
   });
 
   it('yields results for a SELECT query with relative URIs', async () => {
-    const result = await readAll(engine.execute('SELECT ?subject WHERE { ?subject a <Person> } '));
+    const result = await readAll(engine.execute('SELECT ?subject WHERE { ?subject a <http://example.org/Person> } '));
     expect(result).toHaveLength(1);
-    expect(result[0].get('?subject').value).toEqual('http://example.org/Jesse');
+    expect<string | undefined>(result[0].get('subject')?.value).toEqual('http://example.org/Jesse');
   });
 });

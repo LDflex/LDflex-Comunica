@@ -27,11 +27,11 @@
     "@babel/cli": "^7.16.0",
     "@babel/core": "^7.16.5",
     "@babel/preset-env": "^7.16.5",
-    "@comunica/actor-http-proxy": "^1.22.1",
-    "@comunica/actor-init-sparql": "^1.22.3",
-    "@comunica/actor-init-sparql-file": "^1.22.3",
-    "@comunica/actor-init-sparql-rdfjs": "^1.22.3",
     "@comunica/bus-rdf-resolve-quad-pattern": "^1.22.0",
+    "@comunica/query-sparql": "^2.0.3",
+    "@comunica/query-sparql-file": "^2.0.3",
+    "@comunica/query-sparql-rdfjs": "^2.0.3",
+    "@comunica/types": "^2.0.1",
     "@pollyjs/adapter-node-http": "^6.0.4",
     "@pollyjs/core": "^6.0.4",
     "@pollyjs/persister-fs": "^6.0.4",
@@ -82,6 +82,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@comunica/actor-init-sparql-solid": "^1.0.2"
+    "@comunica/query-sparql-solid": "^2.0.1"
   }
 }

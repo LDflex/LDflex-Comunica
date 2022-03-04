@@ -60,7 +60,7 @@ describe('A ComunicaEngine instance without default source', () => {
   it('executeUpdate errors on SELECT query', async () => {
     const store = new Store();
     const result = engine.executeUpdate(SELECT_TYPES, store);
-    await expect(readAll(result)).rejects.toThrow('Update query returned unexpected result type: bindings');
+    await expect(readAll(result)).rejects.toThrow('Query result type \'void\' was expected, while \'bindings\' was found.');
   });
 });
 
@@ -98,7 +98,7 @@ describe('A ComunicaEngine instance with one default source', () => {
 
   it('executeUpdate errors on SELECT query', async () => {
     const result = engine.executeUpdate(SELECT_TYPES);
-    await expect(readAll(result)).rejects.toThrow('Update query returned unexpected result type: bindings');
+    await expect(readAll(result)).rejects.toThrow("Query result type 'void' was expected, while 'bindings' was found.");
   });
 });
 
@@ -142,7 +142,7 @@ describe('A ComunicaEngine instance with one default source and different update
 
   it('executeUpdate errors on SELECT query', async () => {
     const result = engine.executeUpdate(SELECT_TYPES);
-    await expect(readAll(result)).rejects.toThrow('Update query returned unexpected result type: bindings');
+    await expect(readAll(result)).rejects.toThrow("Query result type 'void' was expected, while 'bindings' was found.");
     expect(store.getQuads(null, null, null, null)).toEqual([]);
   });
 });
