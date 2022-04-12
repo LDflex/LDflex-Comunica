@@ -79,7 +79,7 @@ export default class ComunicaEngine {
     }
     else if (sources.length !== 0) {
       // Execute the query and yield the results
-      yield* this.streamToAsyncIterable(await this.engine.queryBindings(sparql, { sources, ...this.options }));
+      yield* streamToAsyncIterable(await this.engine.queryBindings(sparql, { sources, ...this.options }));
     }
   }
 
@@ -147,65 +147,6 @@ export default class ComunicaEngine {
   }
 
   /**
-   * Transforms the readable into an asynchronously iterable object
-   */
-  private streamToAsyncIterable(readable: BindingsStream): AsyncIterableIterator<Bindings> {
-    let done = false;
-    let pendingError: Error | undefined;
-    let pendingPromise: { resolve: (bindings: IteratorResult<Bindings>) => void, reject: (err: Error) => void } | null;
-
-    readable.on('readable', settlePromise);
-    readable.on('error', finish);
-    readable.on('end', finish);
-
-    return {
-      next: () => new Promise(trackPromise),
-      [Symbol.asyncIterator]() { return this; },
-    };
-
-    function trackPromise(resolve: (bindings: IteratorResult<Bindings>) => void, reject: (err: Error) => void) {
-      pendingPromise = { resolve, reject };
-      settlePromise();
-    }
-
-    function settlePromise() {
-      // Finish if the stream errored or ended
-      if (done || pendingError) {
-        finish();
-      }
-      // Try to resolve the promise with a value
-      else if (pendingPromise) {
-        const value = readable.read();
-        if (value !== null) {
-          pendingPromise.resolve({ value });
-          pendingPromise = null;
-        }
-      }
-    }
-
-    function finish(error?: Error) {
-      // Finish with or without an error
-      if (!pendingError) {
-        done = true;
-        pendingError = error;
-      }
-      // Try to emit the result
-      if (pendingPromise) {
-        if (!pendingError)
-          // @ts-ignore
-          pendingPromise.resolve({ done });
-        else
-          pendingPromise.reject(pendingError);
-        pendingPromise = null;
-      }
-      // Detach listeners
-      readable.on('readable', settlePromise);
-      readable.on('error', finish);
-      readable.on('end', finish);
-    }
-  }
-
-  /**
    * Removes the given document (or all, if not specified) from the cache,
    * such that fresh results are obtained next time.
    */
@@ -217,4 +158,35 @@ export default class ComunicaEngine {
 // Flattens the given array one level deep
 async function flattenAsync<T>(array: Promise<T[]>[]) {
   return ([] as T[]).concat(...(await Promise.all(array)));
+}
+
+/**
+ * Transforms the readable into an asynchronously iterable object
+ */
+export async function *streamToAsyncIterable(readable: BindingsStream): AsyncIterableIterator<Bindings> {
+  let item: Bindings | null;
+  let err: Error | undefined;
+  while (true) {
+    while ((item = readable.read()) !== null)
+      yield item;
+    if (err)
+      throw err;
+    if (readable.done)
+      return;
+    err = await awaitEvent(readable);
+  }
+}
+
+async function awaitEvent(readable: BindingsStream): Promise<Error | undefined> {
+  return new Promise(res => {
+    const voidCall = (e: Error | undefined) => {
+      readable.removeListener('readable', voidCall);
+      readable.removeListener('end', voidCall);
+      readable.removeListener('error', voidCall);
+      res(e);
+    };
+    readable.on('readable', voidCall);
+    readable.on('end', voidCall);
+    readable.on('error', voidCall);
+  });
 }

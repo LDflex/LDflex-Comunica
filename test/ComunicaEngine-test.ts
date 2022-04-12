@@ -1,7 +1,7 @@
 /** @jest-environment setup-polly-jest/jest-environment-node */
 
 
-import ComunicaEngine from '../src/ComunicaEngine';
+import ComunicaEngine, { streamToAsyncIterable } from '../src/ComunicaEngine';
 
 import { mockHttp, readAll } from './util';
 import { Store, DataFactory } from 'n3';
@@ -132,14 +132,14 @@ describe('An ComunicaEngine instance without default source', () => {
     const stream = new Readable();
     stream.push(null);
     // @ts-expect-error
-    const result = engine.streamToAsyncIterable(stream);
+    const result = streamToAsyncIterable(stream);
     expect(await readAll(result)).toHaveLength(0);
   });
 
   it('reads a stream that ends immediately', async () => {
     const stream = new Readable();
     // @ts-expect-error
-    const result = engine.streamToAsyncIterable(stream);
+    const result = streamToAsyncIterable(stream);
     stream.push(null);
     await new Promise(resolve => setImmediate(resolve));
     expect(await readAll(result)).toHaveLength(0);
@@ -149,7 +149,7 @@ describe('An ComunicaEngine instance without default source', () => {
     const stream = new Readable();
     stream._read = () => {};
     // @ts-expect-error
-    const result = engine.streamToAsyncIterable(stream);
+    const result = streamToAsyncIterable(stream);
     stream.emit('error', new Error('my error'));
     stream.emit('error', new Error('my other error'));
     await expect(readAll(result)).rejects.toThrow('my error');
@@ -159,7 +159,7 @@ describe('An ComunicaEngine instance without default source', () => {
     const stream = new Readable();
     stream._read = () => {};
     // @ts-expect-error
-    const result = engine.streamToAsyncIterable(stream);
+    const result = streamToAsyncIterable(stream);
     setImmediate(() => stream.emit('error', new Error('my error')));
     await expect(readAll(result)).rejects.toThrow('my error');
   });
