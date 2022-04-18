@@ -79,7 +79,16 @@ export default class ComunicaEngine {
     }
     else if (sources.length !== 0) {
       // Execute the query and yield the results
-      yield* this.streamToAsyncIterable(await this.engine.queryBindings(sparql, { sources, ...this.options }));
+      for await (const binding of this.streamToAsyncIterable(await this.engine.queryBindings(sparql, { sources, ...this.options }))) {
+        yield new Proxy(binding, {
+          get(target, name) {
+            if (name === 'values')
+              return () => toIterator(binding.values());
+            // @ts-ignore
+            return target[name];
+          },
+        });
+      }
     }
   }
 
@@ -212,6 +221,11 @@ export default class ComunicaEngine {
   async clearCache(document: string) {
     await this.engine.invalidateHttpCache(document);
   }
+}
+
+function *toIterator<T>(iterable: Iterable<T>): Iterator<T> {
+  for (const i of iterable)
+    yield i;
 }
 
 // Flattens the given array one level deep
