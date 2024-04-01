@@ -18,6 +18,7 @@ export function mockHttp() {
     persister: FSPersister,
     persisterOptions: { fs: { recordingsDir } },
     recordFailedRequests: true,
+    mode: 'replay',
   });
 }
 

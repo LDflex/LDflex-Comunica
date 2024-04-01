@@ -15,7 +15,7 @@ const SELECT_TYPES = `
 `;
 
 const PROFILE_URL = 'https://www.w3.org/People/Berners-Lee/card#i';
-const OTHER_PROFILE_URL = 'https://ruben.inrupt.net/profile/card';
+const OTHER_PROFILE_URL = 'https://ruben.verborgh.org/#me';
 
 describe('An ComunicaEngine instance without default source', () => {
   const engine = new ComunicaEngine();
@@ -72,7 +72,7 @@ describe('An ComunicaEngine instance without default source', () => {
     const sources = [[[PROFILE_URL]], Promise.resolve(OTHER_PROFILE_URL)];
     const result = engine.execute(SELECT_TYPES, Promise.resolve(sources));
     const items = await readAll(result);
-    expect(items).toHaveLength(9);
+    expect(items).toHaveLength(30);
   });
 
   it('yields results for a SELECT query with an RDF/JS source', async () => {
