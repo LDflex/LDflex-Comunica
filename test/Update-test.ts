@@ -43,7 +43,7 @@ describe('A ComunicaEngine instance without default source', () => {
 
   it('throws error on INSERT queries when no sources are provided', async () => {
     const result = engine.execute('INSERT DATA { <http://a> <http://b> <http://c> }');
-    await expect(() => readAll(result)).rejects.toThrowError('At least one source must be specified: Updates are inserted into the first given data source if no destination is specified, or if using explicit sources for query');
+    await expect(() => readAll(result)).rejects.toThrow('At least one source must be specified: Updates are inserted into the first given data source if no destination is specified, or if using explicit sources for query');
   });
 
   it('supports DELETE queries', async () => {
@@ -187,7 +187,7 @@ describe('A ComunicaEngine instance with one default source and an empty destina
 
   it('errors on INSERT queries when no explicit source is provided', async () => {
     const result = engine.execute(' delete data { <http://a> <http://b> <http://c> }');
-    await expect(() => readAll(result)).rejects.toThrowError('Destination must be a single source, not 0');
+    await expect(() => readAll(result)).rejects.toThrow('Destination must be a single source, not 0');
   });
 
   it('executeUpdate errors on SELECT query', async () => {
@@ -236,7 +236,7 @@ describe('A ComunicaEngine instance with one default source and 2 destinations',
 
   it('errors on INSERT queries when no explicit source is provided', async () => {
     const result = engine.execute(' delete data { <http://a> <http://b> <http://c> }');
-    await expect(() => readAll(result)).rejects.toThrowError('Destination must be a single source, not 2');
+    await expect(() => readAll(result)).rejects.toThrow('Destination must be a single source, not 2');
   });
 
   it('executeUpdate errors on SELECT query', async () => {
