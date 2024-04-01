@@ -5,8 +5,7 @@ import ComunicaEngine from '../src/ComunicaEngine';
 
 import { mockHttp, readAll } from './util';
 import { Store, DataFactory } from 'n3';
-const { namedNode, defaultGraph, quad } = DataFactory;
-import { Readable } from 'stream';
+const { namedNode, quad } = DataFactory;
 
 const SELECT_TYPES = `
   SELECT ?subject ?type WHERE {
@@ -15,7 +14,7 @@ const SELECT_TYPES = `
 `;
 
 const PROFILE_URL = 'https://www.w3.org/People/Berners-Lee/card#i';
-const OTHER_PROFILE_URL = 'https://ruben.inrupt.net/profile/card';
+const OTHER_PROFILE_URL = 'https://ruben.verborgh.org/#me';
 
 describe('An ComunicaEngine instance without default source', () => {
   const engine = new ComunicaEngine();
@@ -72,26 +71,24 @@ describe('An ComunicaEngine instance without default source', () => {
     const sources = [[[PROFILE_URL]], Promise.resolve(OTHER_PROFILE_URL)];
     const result = engine.execute(SELECT_TYPES, Promise.resolve(sources));
     const items = await readAll(result);
-    expect(items).toHaveLength(9);
+    expect(items).toHaveLength(30);
   });
 
   it('yields results for a SELECT query with an RDF/JS source', async () => {
-    // Create source with specific result stream
-    const stream = new Readable({ objectMode: true });
-    stream.push({
-      subject: namedNode(PROFILE_URL),
-      predicate: namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-      object: namedNode('http://xmlns.com/foaf/0.1/Person'),
-      graph: defaultGraph,
-    });
-    stream.push({
-      subject: namedNode(PROFILE_URL),
-      predicate: namedNode('http://example.org/#custom'),
-      object: namedNode('http://xmlns.com/foaf/0.1/Agent'),
-      graph: defaultGraph,
-    });
-    stream.push(null);
-    const source = { match: jest.fn(() => stream) };
+    const source = new Store([
+      quad(
+        namedNode(PROFILE_URL),
+        namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+        namedNode('http://xmlns.com/foaf/0.1/Person'),
+      ),
+      quad(
+        namedNode(PROFILE_URL),
+        namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+        namedNode('http://xmlns.com/foaf/0.1/Agent'),
+      ),
+    ]);
+
+    jest.spyOn(source, 'match');
 
     // Count query results
     const result = engine.execute(SELECT_TYPES, source);
@@ -99,20 +96,8 @@ describe('An ComunicaEngine instance without default source', () => {
     expect(items).toHaveLength(2);
 
     // Verify correct usage of source
-    expect(source.match).toHaveBeenCalled();
-    expect(source.match.mock.calls[0]).toHaveLength(4);
-    // @ts-ignore
-    expect(source.match.mock.calls[0][0]).toBe(undefined);
-    // @ts-ignore
-    expect(source.match.mock.calls[0][1]
-      .equals(namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')))
-      .toBe(true);
-    // @ts-ignore
-    expect(source.match.mock.calls[0][2]).toBe(undefined);
-    // @ts-ignore
-    expect(source.match.mock.calls[0][3]
-      .equals(defaultGraph()))
-      .toBe(true);
+    expect(source.match).toHaveBeenCalledWith(undefined, expect.objectContaining({ termType: 'NamedNode', value: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' }), undefined, expect.objectContaining({ termType: 'DefaultGraph', value: '' }));
+    expect(source.match).toHaveBeenCalledTimes(1);
   });
 
   it('throws an error with an unsupported source', async () => {
@@ -126,42 +111,6 @@ describe('An ComunicaEngine instance without default source', () => {
   it('throws an error with an invalid query', async () => {
     const result = engine.execute('INVALID QUERY', PROFILE_URL);
     await expect(readAll(result)).rejects.toThrow('Parse error');
-  });
-
-  it('reads an ended stream', async () => {
-    const stream = new Readable();
-    stream.push(null);
-    // @ts-expect-error
-    const result = engine.streamToAsyncIterable(stream);
-    expect(await readAll(result)).toHaveLength(0);
-  });
-
-  it('reads a stream that ends immediately', async () => {
-    const stream = new Readable();
-    // @ts-expect-error
-    const result = engine.streamToAsyncIterable(stream);
-    stream.push(null);
-    await new Promise(resolve => setImmediate(resolve));
-    expect(await readAll(result)).toHaveLength(0);
-  });
-
-  it('throws an error when the stream errors before reading starts', async () => {
-    const stream = new Readable();
-    stream._read = () => {};
-    // @ts-expect-error
-    const result = engine.streamToAsyncIterable(stream);
-    stream.emit('error', new Error('my error'));
-    stream.emit('error', new Error('my other error'));
-    await expect(readAll(result)).rejects.toThrow('my error');
-  });
-
-  it('throws an error when the stream errors after reading has started', async () => {
-    const stream = new Readable();
-    stream._read = () => {};
-    // @ts-expect-error
-    const result = engine.streamToAsyncIterable(stream);
-    setImmediate(() => stream.emit('error', new Error('my error')));
-    await expect(readAll(result)).rejects.toThrow('my error');
   });
 
   it('clears the cache for a given document', async () => {

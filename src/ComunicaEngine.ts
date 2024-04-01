@@ -1,9 +1,8 @@
 import { QueryEngine } from '@comunica/query-sparql-solid';
 import type * as RDF from '@rdfjs/types';
-import type { BindingsStream, Bindings, DataSources, IDataSource } from '@comunica/types';
+import type { Bindings, SourceType } from '@comunica/types';
 
-export type DataSource = URL | RDF.NamedNode | IDataSource;
-
+export type DataSource = URL | RDF.NamedNode | SourceType;
 // Change over to this type once https://github.com/microsoft/TypeScript/issues/47208#issuecomment-1014128087 is resolved
 // export type RawDataSources = DataSource | Promise<RawDataSources> | RawDataSources[];
 export type MaybePromiseArray<T> = T | T[] | Promise<T>;
@@ -39,13 +38,13 @@ export interface EngineSettings {
  * Asynchronous iterator wrapper for the Comunica SPARQL query engine.
  */
 export default class ComunicaEngine {
-  private sources: Promise<DataSources>;
+  private sources: Promise<SourceType[]>;
 
   private engine: QueryEngine;
 
   private options: any;
 
-  private destination: Promise<DataSources> | undefined;
+  private destination: Promise<SourceType[]> | undefined;
 
   /**
    * Create a ComunicaEngine to query the given default source.
@@ -79,7 +78,7 @@ export default class ComunicaEngine {
     }
     else if (sources.length !== 0) {
       // Execute the query and yield the results
-      for await (const binding of this.streamToAsyncIterable(await this.engine.queryBindings(sparql, { sources, ...this.options }))) {
+      for await (const binding of await this.engine.queryBindings(sparql, { sources, ...this.options })) {
         yield new Proxy(binding, {
           get(target, name) {
             if (name === 'values')
@@ -96,7 +95,7 @@ export default class ComunicaEngine {
    * Creates an asynchronous iterable with the results of the SPARQL UPDATE query.
    */
   async* executeUpdate(sparql: string, source?: RawDataSources): AsyncIterableIterator<never> {
-    let sources: DataSources;
+    let sources: SourceType[];
     // Need to await the destination
     const destination = await this.destination;
 
@@ -124,7 +123,7 @@ export default class ComunicaEngine {
   /**
    * Parses the source(s) into an array of Comunica sources.
    */
-  private async parseSources(source?: RawDataSources, defaultSources: Promise<DataSources> | DataSources = []): Promise<DataSources> {
+  private async parseSources(source?: RawDataSources, defaultSources: Promise<SourceType[]> | SourceType[] = []): Promise<SourceType[]> {
     const sources = await source;
     if (!sources)
       return defaultSources;
@@ -145,7 +144,7 @@ export default class ComunicaEngine {
 
     // Needs to be after the string check since those also have a match functions
     if ('match' in sources && typeof sources.match === 'function')
-      return [{ value: sources, type: 'rdfjsSource' }];
+      return [sources];
 
     // Wrap a single source in an array
     if ('value' in sources && typeof sources.value === 'string')
@@ -156,69 +155,10 @@ export default class ComunicaEngine {
   }
 
   /**
-   * Transforms the readable into an asynchronously iterable object
-   */
-  private streamToAsyncIterable(readable: BindingsStream): AsyncIterableIterator<Bindings> {
-    let done = false;
-    let pendingError: Error | undefined;
-    let pendingPromise: { resolve: (bindings: IteratorResult<Bindings>) => void, reject: (err: Error) => void } | null;
-
-    readable.on('readable', settlePromise);
-    readable.on('error', finish);
-    readable.on('end', finish);
-
-    return {
-      next: () => new Promise(trackPromise),
-      [Symbol.asyncIterator]() { return this; },
-    };
-
-    function trackPromise(resolve: (bindings: IteratorResult<Bindings>) => void, reject: (err: Error) => void) {
-      pendingPromise = { resolve, reject };
-      settlePromise();
-    }
-
-    function settlePromise() {
-      // Finish if the stream errored or ended
-      if (done || pendingError) {
-        finish();
-      }
-      // Try to resolve the promise with a value
-      else if (pendingPromise) {
-        const value = readable.read();
-        if (value !== null) {
-          pendingPromise.resolve({ value });
-          pendingPromise = null;
-        }
-      }
-    }
-
-    function finish(error?: Error) {
-      // Finish with or without an error
-      if (!pendingError) {
-        done = true;
-        pendingError = error;
-      }
-      // Try to emit the result
-      if (pendingPromise) {
-        if (!pendingError)
-          // @ts-ignore
-          pendingPromise.resolve({ done });
-        else
-          pendingPromise.reject(pendingError);
-        pendingPromise = null;
-      }
-      // Detach listeners
-      readable.on('readable', settlePromise);
-      readable.on('error', finish);
-      readable.on('end', finish);
-    }
-  }
-
-  /**
    * Removes the given document (or all, if not specified) from the cache,
    * such that fresh results are obtained next time.
    */
-  async clearCache(document: string) {
+  async clearCache(document?: string) {
     await this.engine.invalidateHttpCache(document);
   }
 }
