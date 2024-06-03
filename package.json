@@ -47,7 +47,7 @@
     "ldflex": "^2.15.2",
     "mkdirp": "^3.0.1",
     "n3": "^1.17.3",
-    "semantic-release": "^23.0.6",
+    "semantic-release": "^24.0.0",
     "setup-polly-jest": "^0.11.0",
     "ts-jest": "^29.1.2",
     "typescript": "^5.4.3"
